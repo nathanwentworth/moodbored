@@ -3,20 +3,35 @@
 // All of the Node.js APIs are available in this process.
 const moodbored = 'moodbored';
 
-
+// requires
 const sizeOf = require('image-size');
 const fs = require('fs');
 
+// directory variables
 let rootDirectory = './mood';
 let currentPath = rootDirectory;
 let directoriesLoaded = false;
 
+// temporary element storage
+let imageElements = [];
+
+// container elements
 let folderView;
 let imageView;
 
+// option/input elements
+let optionsButton;
+let optionsMenu;
 let directoryInput;
 let directoryInputSubmit;
+let imageWidthController;
+let imageWidthLabel;
 
+// global options
+let numberOfColumns = 3;
+let gutter = 6;
+
+// other elements
 let title;
 
 function Init() {
@@ -27,6 +42,24 @@ function Init() {
   directoryInput = document.getElementById('directoryInput');
   directoryInput.value = rootDirectory;
   directoryInputSubmit = document.getElementById('directoryInputSubmit');
+
+  optionsButton = document.getElementById('options-button');
+  optionsButton.addEventListener('click', function () {
+    console.log("toggle options menu");
+  });
+
+  imageWidthController = document.getElementById('image-width-ctrl');
+  imageWidthLabel = document.getElementById('image-width-label');
+  imageWidthLabel.innerText = imageWidthController.value;
+
+  imageWidthController.addEventListener('input', function() {
+    numberOfColumns = imageWidthController.value;
+    imageWidthLabel.innerText = imageWidthController.value;
+    if (imageElements.length > 0) {
+      ResizeImages();
+    }
+    console.log(imageWidthController.value);
+  });
 
   directoryInputSubmit.addEventListener('click', function() {
     LoadImages(directoryInput.value);
@@ -104,9 +137,11 @@ function LoadImages(dirPath) {
   let extraSlashes = /(\/)+/g;
   dirPath = dirPath.replace(extraSlashes, "/");
   console.log(dirPath);
+  title.innerText = moodbored + " - " + dirPath;
   if (dirPath != currentPath) {
     currentPath = dirPath;
     ClearChildren(imageView);
+    imageElements = [];
 
     fs.readdir(dirPath, (err, dir) => {
       let noImages = false;
@@ -136,21 +171,21 @@ function CreateImage(path, file) {
   img.src = src;
   img.height = dim.height;
   img.width = dim.width;
-  ResizeImage(img, 3, 6);
+  ResizeImage(img);
   imageView.appendChild(img);
   img.onload = function () {
     img.classList.add('img-loaded');
   }
+  imageElements.push(img);
 }
 
-function ResizeImages(numberOfColumns, gutter) {
-  let imgs = imageView.getElementsByTagName('img');
-  for (let img of imgs) {
+function ResizeImages() {
+  for (let img of imageElements) {
     ResizeImage(img, numberOfColumns, gutter);
   }
 }
 
-function ResizeImage(img, numberOfColumns, gutter) {
+function ResizeImage(img) {
   img.style.width = "calc(100% / " + numberOfColumns + " - " + (gutter * 2) + "px)";
   img.style.margin = gutter + "px";
 }
