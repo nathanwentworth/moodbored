@@ -4,8 +4,27 @@ body {
   color: #222;
 }
 
-.folders {
+main {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+}
 
+section {
+  display: inline-block;
+  padding: 1rem;
+}
+
+.left {
+  position: fixed;
+  width: 30%;
+}
+.right {
+  width: 70%;
+  margin-left: auto;
+}
+
+.folders {
 }
 
 .folders span {
@@ -43,7 +62,6 @@ input[type=text] {
   border-bottom: 1px solid #000;
   padding: 1rem;
   margin-bottom: 1rem;
-  width: 37rem;
 }
 
 input[type=button] {
