@@ -228,9 +228,11 @@ function GetDirectories(dirPath) {
 function CreateFolderView() {
   ClearChildren(folderView);
   leaves.sort();
-  for (let leaf of leaves) {
-    // console.log(leaf);
-    CreateFolderElement(leaf);
+  if (leaves.length > 1) {
+    for (let leaf of leaves) {
+      // console.log(leaf);
+      CreateFolderElement(leaf);
+    }
   }
 }
 
