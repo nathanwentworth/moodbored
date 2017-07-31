@@ -39,13 +39,16 @@ let backgroundOption = {
   // ctrl, label
 }
 
+let userStylesOption;
+
 let hideOptionsButton;
 
 // global options
 let options = {
   columns: 3,
   gutter: 6,
-  background: '#fbfbfb'
+  background: '#fbfbfb',
+  userStyles: ''
 };
 let lastDirectory = currentPath;
 
@@ -64,6 +67,7 @@ function Init() {
   folderView = document.getElementById('folders');
   imageView = document.getElementById('images');
   title = document.getElementsByTagName('title')[0];
+  userStylesElem = document.getElementById('user-styles');
 
   directoryInput = document.getElementById('directoryInput');
   directoryInput.value = rootDirectory;
@@ -127,6 +131,16 @@ function InitOptionControllers() {
     options.background = backgroundOption.ctrl.value;
     backgroundOption.label.innerText = backgroundOption.ctrl.value;
     mainContainer.style.backgroundColor = options.background;
+    Save();
+  });
+
+  userStylesOption = document.getElementById('user-styles-ctrl');
+  userStylesOption.value = options.userStyles;
+  userStylesElem.innerText = options.userStyles;
+  userStylesOption.addEventListener('input', function() {
+    options.userStyles = userStylesOption.value;
+    console.log(userStylesOption.value);
+    userStylesElem.innerText = options.userStyles;
     Save();
   });
 
