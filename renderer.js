@@ -2,6 +2,7 @@
 // be executed in the renderer process for that window.
 // All of the Node.js APIs are available in this process.
 const moodbored = 'moodbored';
+const {dialog} = require('electron').remote;
 
 // requires
 const sizeOf = require('image-size');
@@ -24,7 +25,6 @@ let imageView;
 // option/input elements
 let optionsButton;
 let optionsMenu;
-let directoryInput;
 let directoryInputSubmit;
 
 let columnOption = {
@@ -47,13 +47,17 @@ let hideOptionsButton;
 let options = {
   columns: 3,
   gutter: 6,
-  background: '#fbfbfb',
+  background: '#f1f2f3',
   userStyles: ''
 };
 let lastDirectory = currentPath;
 
 // other elements
 let title;
+
+// this stores the directory structure for both
+// caching access, and client-side access
+let leaves = [];
 
 function Init() {
   console.log(options);
@@ -69,29 +73,24 @@ function Init() {
   title = document.getElementsByTagName('title')[0];
   userStylesElem = document.getElementById('user-styles');
 
-  directoryInput = document.getElementById('directoryInput');
-  directoryInput.value = rootDirectory;
   directoryInputSubmit = document.getElementById('directoryInputSubmit');
 
   directoryInputSubmit.addEventListener('click', function() {
-    LoadDirectory(directoryInput.value);
+    OpenFolder();
   });
 
-  directoryInput.addEventListener('keydown', function (e) {
-    if (e.keyCode == 13) {
-      let val = directoryInput.value;
-      if (val.startsWith("./")) {
-        rootDirectory = val;
-      } else {
-        LoadDirectory(val);
-      }
-    }
-  })
   hideOptionsButton = document.getElementById('hide-options-button');
   hideOptionsButton.addEventListener('click', function () {
     ToggleSection(leftSide);
     ToggleImageContainerSize();
   });
+
+
+  window.addEventListener('keydown', function (e) {
+    if (e.keyCode == 79) {
+      OpenFolder();
+    }
+  })
 
 }
 
@@ -146,6 +145,23 @@ function InitOptionControllers() {
 
 }
 
+function OpenFolder() {
+  dialog.showOpenDialog({properties: ["openDirectory"]}, (folder) => {
+    if (folder === undefined) {
+      console.log("no file selected");
+      return;
+    } else {
+      console.log(folder);
+      let _root = folder[0];
+      leaves = [];
+      ClearChildren(folderView);
+      GetDirectories(_root);
+      LoadDirectory(_root, true);
+      CreateFolderView();
+    }
+  })
+}
+
 function Load() {
   _options = localStorage.getItem('options');
   if (_options != null) {
@@ -163,11 +179,16 @@ function Save() {
 
 // on load, run the init and the loadfiles functions
 window.addEventListener('load', function () {
+  console.log('~~~~~~~~~ initial load ~~~~~~~~~');
   Init();
   InitOptionControllers();
+  let loadedPath = localStorage.getItem('lastDirectory');
+  rootDirectory = localStorage.getItem('rootDirectory');
+  console.log('root is ' + rootDirectory);
+
   GetDirectories(rootDirectory);
   CreateFolderView();
-  let loadedPath = localStorage.getItem('lastDirectory');
+
   if (loadedPath != null) {
     LoadDirectory(loadedPath);
   } else {
@@ -175,41 +196,40 @@ window.addEventListener('load', function () {
   }
 });
 
-// this stores the directory structure for both
-// caching access, and client-side access
-let leaves = [];
-
 function GetDirectories(dirPath) {
   let dir = fs.readdirSync(dirPath);
+  if (dir != undefined && dir.length > 0) {
+    for (let i = 0; i < dir.length; i++) {
+      let file = dir[i];
+      let notLeaf = false;
 
-  for (let i = 0; i < dir.length; i++) {
-    let file = dir[i];
-    let notLeaf = false;
-
-    let stat = fs.lstatSync(dirPath + '//' + file);
-    if (!stat.isDirectory()) {
-      if (i === dir.length - 1 && !notLeaf) {
-        leaves.push(dirPath);
-        console.log(leaves[leaves.length - 1]);
-        // because it reached the end of the loop and there's no directories,
-        // it must be full of images
-        console.log(dirPath + " is a leaf");
-        // CreateFolderElement(dirPath);
+      let stat = fs.lstatSync(dirPath + '//' + file);
+      if (!stat.isDirectory()) {
+        if (i === dir.length - 1 && !notLeaf) {
+          leaves.push(dirPath);
+          // console.log(leaves[leaves.length - 1]);
+          // because it reached the end of the loop and there's no directories,
+          // it must be full of images
+          console.log(dirPath + " is a leaf");
+          // CreateFolderElement(dirPath);
+        }
+      } else {
+        let totalPath = dirPath + '/' + file;
+        // because there's a directory, it cannot be an end folder
+        notLeaf = true;
+        // starts the function again in the child directory it found
+        GetDirectories(totalPath);
       }
-    } else {
-      let totalPath = dirPath + '/' + file;
-      // because there's a directory, it cannot be an end folder
-      notLeaf = true;
-      // starts the function again in the child directory it found
-      GetDirectories(totalPath);
     }
   }
+
 }
 
 function CreateFolderView() {
+  ClearChildren(folderView);
   leaves.sort();
   for (let leaf of leaves) {
-    console.log(leaf);
+    // console.log(leaf);
     CreateFolderElement(leaf);
   }
 }
@@ -228,16 +248,17 @@ function CreateFolderElement(totalPath) {
   folderView.appendChild(sp);
 }
 
-function LoadDirectory(dirPath) {
-  directoryInput.value = dirPath.replace(rootDirectory, "");
-  if (!dirPath.startsWith("./")) {
-    dirPath = rootDirectory + "/" + dirPath;
+function LoadDirectory(dirPath, newRoot) {
+  if (newRoot) {
+    rootDirectory = dirPath;
+    localStorage.setItem('rootDirectory', rootDirectory);
+    console.log('new root: ' + rootDirectory);
+    leaves = [];
+    GetDirectories(dirPath);
   }
-  let extraSlashes = /(\/)+/g;
-  dirPath = dirPath.replace(extraSlashes, "/");
+
   console.log('loading ' + dirPath);
   title.innerText = moodbored + " - " + dirPath;
-
 
   if (dirPath != currentPath) {
     currentPath = dirPath;
@@ -251,19 +272,23 @@ function LoadDirectory(dirPath) {
 
   function LoadImages(_path) {
     fs.readdir(_path, (err, dir) => {
-      for (let file of dir) {
-        fs.lstat(_path + '//' + file, function (err, stats) {
-          if (err) {
-            return console.error(file + ': ' + err);
-          }
+      if (dir.length > 0) {
+        for (let file of dir) {
+          fs.lstat(_path + '//' + file, function (err, stats) {
+            if (err) {
+              return console.error(file + ': ' + err);
+            }
 
-          if (!stats.isDirectory() &&
-              file.match(/.(jpg|png|gif|jpeg|bmp|webp|svg)/)
-              )
-          {
-            CreateImage(_path, file);
-          }
-        })
+            if (!stats.isDirectory() &&
+                file.match(/.(jpg|png|gif|jpeg|bmp|webp|svg)/)
+                )
+            {
+              CreateImage(_path, file);
+            }
+          })
+        }
+      } else {
+        console.log(dir + ' length is 0!');
       }
     })
   }
@@ -305,11 +330,11 @@ function ResizeImage(img) {
 }
 
 function ClearChildren(parent) {
-  console.log('clearing all children elements');
+  console.log('clearing all children elements of ' + parent.id);
   while (parent.firstChild) {
     parent.removeChild(parent.firstChild);
   }
-  console.log('done clearing elements');
+  console.log('done clearing elements of ' + parent.id);
 }
 
 
