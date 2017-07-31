@@ -16,6 +16,8 @@ let directoriesLoaded = false;
 let imageElements = [];
 
 // container elements
+let leftSide;
+let rightSide;
 let folderView;
 let imageView;
 
@@ -24,17 +26,37 @@ let optionsButton;
 let optionsMenu;
 let directoryInput;
 let directoryInputSubmit;
-let imageWidthController;
-let imageWidthLabel;
+
+let columnOption = {
+  // ctrl
+  // label
+}
+
+let gutterOption = {
+  // ctrl
+  // label
+}
+
+let hideOptionsButton;
 
 // global options
-let numberOfColumns = 3;
-let gutter = 6;
+let options = {
+  columns: 3,
+  gutter: 6,
+  background: '#fbfbfb'
+};
 
 // other elements
 let title;
 
 function Init() {
+  console.log(options);
+  Load();
+  console.log(options);
+
+
+  leftSide = document.getElementById('left');
+  rightSide = document.getElementById('right');
   folderView = document.getElementById('folders');
   imageView = document.getElementById('images');
   title = document.getElementsByTagName('title')[0];
@@ -42,24 +64,6 @@ function Init() {
   directoryInput = document.getElementById('directoryInput');
   directoryInput.value = rootDirectory;
   directoryInputSubmit = document.getElementById('directoryInputSubmit');
-
-  optionsButton = document.getElementById('options-button');
-  optionsButton.addEventListener('click', function () {
-    console.log("toggle options menu");
-  });
-
-  imageWidthController = document.getElementById('image-width-ctrl');
-  imageWidthLabel = document.getElementById('image-width-label');
-  imageWidthLabel.innerText = imageWidthController.value;
-
-  imageWidthController.addEventListener('input', function() {
-    numberOfColumns = imageWidthController.value;
-    imageWidthLabel.innerText = imageWidthController.value;
-    if (imageElements.length > 0) {
-      ResizeImages();
-    }
-    console.log(imageWidthController.value);
-  });
 
   directoryInputSubmit.addEventListener('click', function() {
     LoadImages(directoryInput.value);
@@ -75,13 +79,64 @@ function Init() {
       }
     }
   })
+  hideOptionsButton = document.getElementById('hide-options-button');
+  hideOptionsButton.addEventListener('click', function () {
+    ToggleSection(leftSide);
+    ToggleImageContainerSize();
+  });
+
 }
 
+function InitOptionControllers() {
+  columnOption.ctrl = document.getElementById('image-width-ctrl');
+  columnOption.label = document.getElementById('image-width-label');
+  columnOption.label.innerText = options.columns;
+  columnOption.ctrl.value = options.columns;
+  columnOption.ctrl.addEventListener('input', function() {
+    options.columns = columnOption.ctrl.value;
+    columnOption.label.innerText = columnOption.ctrl.value;
+    if (imageElements.length > 0) {
+      ResizeImages();
+    }
+    Save();
+  });
+
+  gutterOption.ctrl = document.getElementById('gutter-width-ctrl');
+  gutterOption.label = document.getElementById('gutter-width-label');
+  gutterOption.label.innerText = options.gutter;
+  gutterOption.ctrl.value = options.gutter;
+  gutterOption.ctrl.addEventListener('input', function() {
+    options.gutter = gutterOption.ctrl.value;
+    gutterOption.label.innerText = gutterOption.ctrl.value;
+    if (imageElements.length > 0) {
+      ResizeImages();
+    }
+    Save();
+  });
+
+}
+
+function Load() {
+  _options = localStorage.getItem('options');
+  if (_options != null) {
+    options = JSON.parse(_options);
+    console.log("successfully loaded options");
+  } else {
+    console.log("No options saved in local storage, going with defaults");
+  }
+}
+
+function Save() {
+  localStorage.setItem('options', JSON.stringify(options));
+  console.log('saved options');
+}
 
 // on load, run the init and the loadfiles functions
 window.addEventListener('load', function () {
   Init();
+  InitOptionControllers();
   GetDirectories(rootDirectory);
+  CreateFolderView();
   LoadImages(rootDirectory);
 });
 
@@ -90,42 +145,51 @@ window.addEventListener('load', function () {
 let leaves = [];
 
 function GetDirectories(dirPath) {
-  fs.readdir(dirPath, (err, dir) => {
-    for (let i = 0; i < dir.length; i++) {
-      let file = dir[i];
-      let notLeaf = false;
-      fs.lstat(dirPath + '//' + file, function (err, stats) {
-        if (err) {
-          return console.error(file + ': ' + err);
-        }
+  let dir = fs.readdirSync(dirPath);
 
-        if (!stats.isDirectory()) {
-          if (i === dir.length - 1 && !notLeaf) {
-            leaves.push(dirPath);
-            // because it reached the end of the loop and there's no directories,
-            // it must be full of images
-            console.log(dirPath + " is a leaf");
-            CreateFolderElement(dirPath);
-          }
-        } else {
-          let totalPath = dirPath + '/' + file;
-          // because there's a directory, it cannot be an end folder
-          notLeaf = true;
-          // starts the function again in the child directory it found
-          GetDirectories(totalPath);
-        }
-      })
+  for (let i = 0; i < dir.length; i++) {
+    let file = dir[i];
+    let notLeaf = false;
+
+    let stat = fs.lstatSync(dirPath + '//' + file);
+    if (!stat.isDirectory()) {
+      if (i === dir.length - 1 && !notLeaf) {
+        leaves.push(dirPath);
+        console.log(leaves[leaves.length - 1]);
+        // because it reached the end of the loop and there's no directories,
+        // it must be full of images
+        console.log(dirPath + " is a leaf");
+        // CreateFolderElement(dirPath);
+      }
+    } else {
+      let totalPath = dirPath + '/' + file;
+      // because there's a directory, it cannot be an end folder
+      notLeaf = true;
+      // starts the function again in the child directory it found
+      GetDirectories(totalPath);
     }
-  })
+  }
+}
+
+function CreateFolderView() {
+  leaves.sort();
+  for (let leaf of leaves) {
+    console.log(leaf);
+    CreateFolderElement(leaf);
+  }
 }
 
 function CreateFolderElement(totalPath) {
   let sp = document.createElement('span');
-  let spText = document.createTextNode(totalPath.replace(rootDirectory + "/", ""));
+  let spTextContent = totalPath.replace(rootDirectory + "/", "");
+  spTextContent = spTextContent.replace("/", " / ");
+  let spText = document.createTextNode(spTextContent);
   sp.appendChild(spText);
+
   sp.addEventListener('click', function() {
     LoadImages(totalPath);
   });
+
   folderView.appendChild(sp);
 }
 
@@ -181,13 +245,21 @@ function CreateImage(path, file) {
 
 function ResizeImages() {
   for (let img of imageElements) {
-    ResizeImage(img, numberOfColumns, gutter);
+    ResizeImage(img);
   }
 }
 
+function ToggleSection(section) {
+  section.classList.toggle('hidden');
+}
+
+function ToggleImageContainerSize() {
+  rightSide.classList.toggle('expand');
+}
+
 function ResizeImage(img) {
-  img.style.width = "calc(100% / " + numberOfColumns + " - " + (gutter * 2) + "px)";
-  img.style.margin = gutter + "px";
+  img.style.width = "calc(100% / " + options.columns + " - " + (options.gutter * 2) + "px)";
+  img.style.margin = options.gutter + "px";
 }
 
 function ClearChildren(parent) {

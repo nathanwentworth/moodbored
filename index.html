@@ -8,15 +8,27 @@
   </head>
   <body>
     <main>
-    <section class="left">
+    <section class="left visible" id="left">
+
       <div class="folders" id="folders"></div>
+
       <input type="text" name="directory" id='directoryInput'><input type="button" name="submit" value='Go →' id='directoryInputSubmit'>
+
       <button id="options-button">options</button>
       <div class="options" id="options-menu">
-        <label id="image-width-label"></label><input type="range" name="image-width" id='image-width-ctrl' min='1' max='9' value='3'>
+        <label>columns: <span id="image-width-label"></span></label>
+        <input type="range" name="image-width" id='image-width-ctrl' min='1' max='9'>
+
+        <label>gutter: <span id="gutter-width-label"></span></label>
+        <input type="range" name="gutter-width" id='gutter-width-ctrl' min='0' max='64'>
+
+        <label>background: <span id="background-label"></span></label>
+        <input type="text" name="background" id='background-ctrl'>
       </div>
+
     </section>
-    <section class="right">
+    <button id="hide-options-button">< hide</button>
+    <section id="right" class="right">
       <div class="images" id="images"></div>
     </section>
     </main>

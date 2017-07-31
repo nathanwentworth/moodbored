@@ -1,3 +1,8 @@
+
+* {
+  box-sizing: border-box;;
+}
+
 body {
   font-family: sans-serif;
   background: #fbfbfb;
@@ -23,6 +28,10 @@ section {
   width: 70%;
   margin-left: auto;
 }
+.right.expand {
+  width: 100%;
+  margin-left: 16px;
+}
 
 .folders {
 }
@@ -37,7 +46,6 @@ section {
 }
 
 .images {
-  border-top: 1px dotted #000;
   display: flex;
   align-items: center;
   flex-wrap: wrap;
@@ -76,3 +84,23 @@ input[type=button]:hover {
   background: #f00;
   color: #fff;
 }
+
+label {
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+#hide-options-button {
+  position: fixed;
+  left: 16px;
+  bottom: 16px;
+}
+
+.hidden {
+  display: none;
+  visibility: hidden;
+}
+
+
+
+
