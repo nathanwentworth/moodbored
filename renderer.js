@@ -10,12 +10,12 @@ const fs = require('fs');
 // directory variables
 let rootDirectory = './mood';
 let currentPath = rootDirectory;
-let directoriesLoaded = false;
 
 // temporary element storage
 let imageElements = [];
 
 // container elements
+let mainContainer;
 let leftSide;
 let rightSide;
 let folderView;
@@ -28,13 +28,15 @@ let directoryInput;
 let directoryInputSubmit;
 
 let columnOption = {
-  // ctrl
-  // label
+  // ctrl, label
 }
 
 let gutterOption = {
-  // ctrl
-  // label
+  // ctrl, label
+}
+
+let backgroundOption = {
+  // ctrl, label
 }
 
 let hideOptionsButton;
@@ -45,6 +47,7 @@ let options = {
   gutter: 6,
   background: '#fbfbfb'
 };
+let lastDirectory = currentPath;
 
 // other elements
 let title;
@@ -55,6 +58,7 @@ function Init() {
   console.log(options);
 
 
+  mainContainer = document.getElementById('main');
   leftSide = document.getElementById('left');
   rightSide = document.getElementById('right');
   folderView = document.getElementById('folders');
@@ -66,7 +70,7 @@ function Init() {
   directoryInputSubmit = document.getElementById('directoryInputSubmit');
 
   directoryInputSubmit.addEventListener('click', function() {
-    LoadImages(directoryInput.value);
+    LoadDirectory(directoryInput.value);
   });
 
   directoryInput.addEventListener('keydown', function (e) {
@@ -75,7 +79,7 @@ function Init() {
       if (val.startsWith("./")) {
         rootDirectory = val;
       } else {
-        LoadImages(val);
+        LoadDirectory(val);
       }
     }
   })
@@ -114,6 +118,18 @@ function InitOptionControllers() {
     Save();
   });
 
+  backgroundOption.ctrl = document.getElementById('background-ctrl');
+  backgroundOption.label = document.getElementById('background-label');
+  backgroundOption.label.innerText = options.background;
+  backgroundOption.ctrl.value = options.background;
+  mainContainer.style.backgroundColor = options.background;
+  backgroundOption.ctrl.addEventListener('input', function() {
+    options.background = backgroundOption.ctrl.value;
+    backgroundOption.label.innerText = backgroundOption.ctrl.value;
+    mainContainer.style.backgroundColor = options.background;
+    Save();
+  });
+
 }
 
 function Load() {
@@ -137,7 +153,12 @@ window.addEventListener('load', function () {
   InitOptionControllers();
   GetDirectories(rootDirectory);
   CreateFolderView();
-  LoadImages(rootDirectory);
+  let loadedPath = localStorage.getItem('lastDirectory');
+  if (loadedPath != null) {
+    LoadDirectory(loadedPath);
+  } else {
+    LoadDirectory(rootDirectory);
+  }
 });
 
 // this stores the directory structure for both
@@ -187,46 +208,53 @@ function CreateFolderElement(totalPath) {
   sp.appendChild(spText);
 
   sp.addEventListener('click', function() {
-    LoadImages(totalPath);
+    LoadDirectory(totalPath);
   });
 
   folderView.appendChild(sp);
 }
 
-function LoadImages(dirPath) {
+function LoadDirectory(dirPath) {
   directoryInput.value = dirPath.replace(rootDirectory, "");
   if (!dirPath.startsWith("./")) {
     dirPath = rootDirectory + "/" + dirPath;
   }
   let extraSlashes = /(\/)+/g;
   dirPath = dirPath.replace(extraSlashes, "/");
-  console.log(dirPath);
+  console.log('loading ' + dirPath);
   title.innerText = moodbored + " - " + dirPath;
+
+
   if (dirPath != currentPath) {
     currentPath = dirPath;
     ClearChildren(imageView);
     imageElements = [];
 
-    fs.readdir(dirPath, (err, dir) => {
-      let noImages = false;
-      for (let i = 0; i < dir.length; i++) {
-        let file = dir[i];
-        fs.lstat(dirPath + '//' + file, function (err, stats) {
+    lastDirectory = currentPath;
+    localStorage.setItem('lastDirectory', lastDirectory);
+    LoadImages(currentPath);
+  }
+
+  function LoadImages(_path) {
+    fs.readdir(_path, (err, dir) => {
+      for (let file of dir) {
+        fs.lstat(_path + '//' + file, function (err, stats) {
           if (err) {
             return console.error(file + ': ' + err);
           }
 
-          if (!stats.isDirectory()) {
-            if (file.match(/.(jpg|png|gif|jpeg|bmp|webp|svg)/)) {
-              CreateImage(dirPath, file);
-            }
+          if (!stats.isDirectory() &&
+              file.match(/.(jpg|png|gif|jpeg|bmp|webp|svg)/)
+              )
+          {
+            CreateImage(_path, file);
           }
         })
       }
     })
   }
-
 }
+
 
 function CreateImage(path, file) {
   let img = document.createElement('img');

@@ -7,14 +7,14 @@
     <link rel="stylesheet" type="text/css" href="./css/main.css">
   </head>
   <body>
-    <main>
+    <main id="main">
     <section class="left visible" id="left">
 
       <div class="folders" id="folders"></div>
 
-      <input type="text" name="directory" id='directoryInput'><input type="button" name="submit" value='Go →' id='directoryInputSubmit'>
+      <input type="text" name="directory" id='directoryInput' placeholder="/">
+      <input type="button" name="submit" value='Go →' id='directoryInputSubmit'>
 
-      <button id="options-button">options</button>
       <div class="options" id="options-menu">
         <label>columns: <span id="image-width-label"></span></label>
         <input type="range" name="image-width" id='image-width-ctrl' min='1' max='9'>
@@ -27,7 +27,7 @@
       </div>
 
     </section>
-    <button id="hide-options-button">< hide</button>
+    <button id="hide-options-button">hide/show</button>
     <section id="right" class="right">
       <div class="images" id="images"></div>
     </section>

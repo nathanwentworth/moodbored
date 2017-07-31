@@ -5,11 +5,13 @@
 
 body {
   font-family: sans-serif;
-  background: #fbfbfb;
   color: #222;
 }
 
 main {
+  width: 100vw;
+  min-height: 100vh;
+  background: #fbfbfb;
   display: flex;
   flex-direction: row;
   flex-wrap: nowrap;
@@ -21,11 +23,14 @@ section {
 }
 
 .left {
+  background: #fff;
+  height: 100%;
   position: fixed;
-  width: 30%;
+  width: 300px;
+  overflow: scroll;
 }
 .right {
-  width: 70%;
+  width: calc(100% - 300px);
   margin-left: auto;
 }
 .right.expand {
@@ -68,13 +73,13 @@ section {
 input[type=text] {
   border: none;
   border-bottom: 1px solid #000;
-  padding: 1rem;
+  padding: 0.5rem;
   margin-bottom: 1rem;
 }
 
 input[type=button] {
   border: none;
-  padding: 1rem;
+  padding: 0.5rem;
   border-radius: 6px;
   background: #f1f2f3;
   margin-left: 1rem;
