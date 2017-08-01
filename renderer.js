@@ -192,7 +192,7 @@ function LoadOptions() {
     options = JSON.parse(_options);
     console.log("successfully loaded options");
   } else {
-    console.log("No options saved in local storage, going with defaults");
+    console.log("no options saved in local storage, going with defaults");
   }
 }
 
@@ -225,12 +225,9 @@ function GetNewDirectoryStructure(path) {
       let stat = fs.lstatSync(path + '//' + file);
       if (!stat.isDirectory()) {
         if (i === dir.length - 1 && !notLeaf) {
-          leaves.push(path);
-          // console.log(leaves[leaves.length - 1]);
           // because it reached the end of the loop and there's no directories,
           // it must be full of images
-          console.log(path + " is a leaf");
-          // CreateFolderElement(path);
+          leaves.push(path);
         }
       } else {
         let totalPath = path + '/' + file;
@@ -251,21 +248,22 @@ function CreateFolderView() {
       CreateFolderElement(leaf);
     }
   }
+
+  function CreateFolderElement(totalPath) {
+    let sp = document.createElement('button');
+    let spTextContent = totalPath.replace(rootDirectory + "/", "");
+    spTextContent = spTextContent.replace("/", " / ");
+    let spText = document.createTextNode(spTextContent);
+    sp.appendChild(spText);
+
+    sp.addEventListener('click', function() {
+      LoadDirectoryContents(totalPath);
+    });
+
+    folderView.appendChild(sp);
+  }
 }
 
-function CreateFolderElement(totalPath) {
-  let sp = document.createElement('button');
-  let spTextContent = totalPath.replace(rootDirectory + "/", "");
-  spTextContent = spTextContent.replace("/", " / ");
-  let spText = document.createTextNode(spTextContent);
-  sp.appendChild(spText);
-
-  sp.addEventListener('click', function() {
-    LoadDirectoryContents(totalPath);
-  });
-
-  folderView.appendChild(sp);
-}
 
 function LoadDirectoryContents(path, newRoot) {
   if (newRoot) {
@@ -276,9 +274,8 @@ function LoadDirectoryContents(path, newRoot) {
     GetNewDirectoryStructure(path);
   }
 
-  console.log('loading ' + path);
-  title.innerText = moodbored + " - " + path;
-
+  // if the path that's being requested is different than the currently open
+  // path, then load it in. otherwise, don't
   if (path != currentPath) {
     currentPath = path;
     ClearChildren(imageView);
@@ -286,6 +283,7 @@ function LoadDirectoryContents(path, newRoot) {
 
     lastDirectory = currentPath;
     localStorage.setItem('lastDirectory', lastDirectory);
+    title.innerText = moodbored + " - " + path;
     LoadImages(currentPath);
   }
 
@@ -351,6 +349,3 @@ function ClearChildren(parent) {
   }
   console.log('done clearing elements of ' + parent.id);
 }
-
-
-

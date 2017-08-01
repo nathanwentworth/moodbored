@@ -4,19 +4,25 @@
   "description": "a moodboard/image viewer",
   "main": "main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "package-mac": "electron-packager . --overwrite --platform=darwin --arch=x64 --icon='./icon/icon' --prune=true --ignore='^release-builds$' --out=release-builds",
+    "package-win": "electron-packager . --overwrite --platform=win32 --arch=x64 --icon='./icon/icon' --prune=true --ignore='^release-builds$' --out=release-builds --version-string.CompanyName=CE --version-string.FileDescription=CE --version-string.ProductName=\"moodbored\"",
+    "package-linux": "electron-packager . --overwrite --platform=linux --arch=x64 --icon='./icon/icon' --prune=true --ignore='^release-builds$' --out=release-builds",
+    "package-all": "npm run package-mac && npm run package-win && npm run package-linux && open release-builds"
   },
   "repository": "https://github.com/nathanwentworth/moodbored",
+  "homepage": "https://nathanwentworth.co",
   "keywords": [
     "Electron",
     "moodboard",
     "image",
     "viewer"
   ],
-  "author": "nathan wentworth",
+  "author": "nathan wentworth <me@nathanwentworth.co>",
   "license": "CC0-1.0",
   "devDependencies": {
-    "electron": "^1.4.1"
+    "electron": "^1.7.5",
+    "electron-packager": "^8.1.0"
   },
   "dependencies": {
     "image-size": "^0.6.0"
