@@ -9,7 +9,7 @@ const sizeOf = require('image-size');
 const fs = require('fs');
 
 // directory variables
-let rootDirectory = './mood';
+let rootDirectory = '';
 let currentPath = rootDirectory;
 
 // temporary element storage
@@ -40,8 +40,11 @@ let backgroundOption = {
 }
 
 let userStylesOption;
-
 let hideOptionsButton;
+let helpButton;
+let infoButton;
+let howToDialog
+let infoDialog
 
 // global options
 let options = {
@@ -60,10 +63,7 @@ let title;
 let leaves = [];
 
 function Init() {
-  console.log(options);
   Load();
-  console.log(options);
-
 
   mainContainer = document.getElementById('main');
   leftSide = document.getElementById('left');
@@ -84,13 +84,6 @@ function Init() {
     ToggleSection(leftSide);
     ToggleImageContainerSize();
   });
-
-
-  window.addEventListener('keydown', function (e) {
-    if (e.keyCode == 79) {
-      OpenFolder();
-    }
-  })
 
 }
 
@@ -143,6 +136,28 @@ function InitOptionControllers() {
     Save();
   });
 
+  helpButton = document.getElementById('help-ctrl');
+  helpButton.addEventListener('click', function () {
+    HowToDialogToggle();
+  });
+
+  howToDialog = document.getElementById('how-to');
+  document.getElementById('how-to-close-ctrl').addEventListener('click', function () {
+    howToDialog.classList.toggle('hidden');
+  });
+
+  infoButton = document.getElementById('info-ctrl');
+  infoButton.addEventListener('click', function () {
+    InfoDialogToggle();
+  });
+
+  infoDialog = document.getElementById('info');
+  document.getElementById('info-close-ctrl').addEventListener('click', function () {
+    infoDialog.classList.toggle('hidden');
+    console.log('toggled infoDialog');
+  });
+
+
 }
 
 function OpenFolder() {
@@ -179,22 +194,53 @@ function Save() {
 
 // on load, run the init and the loadfiles functions
 window.addEventListener('load', function () {
+  InitialLoad();
+});
+
+function InitialLoad() {
   console.log('~~~~~~~~~ initial load ~~~~~~~~~');
   Init();
   InitOptionControllers();
+  SetAllLinksExternal();
+  document.getElementById('version-disp').innerText = require('electron').remote.app.getVersion();
   let loadedPath = localStorage.getItem('lastDirectory');
   rootDirectory = localStorage.getItem('rootDirectory');
   console.log('root is ' + rootDirectory);
-
-  GetDirectories(rootDirectory);
-  CreateFolderView();
-
-  if (loadedPath != null) {
-    LoadDirectory(loadedPath);
+  if (rootDirectory == null) {
+    HowToDialogToggle();
   } else {
-    LoadDirectory(rootDirectory);
+    GetDirectories(rootDirectory);
+    CreateFolderView();
+
+    if (loadedPath != null) {
+      LoadDirectory(loadedPath);
+    } else if (rootDirectory != '') {
+      LoadDirectory(rootDirectory);
+    } else {
+      console.log('no directory to load, please open one with "open folder"');
+    }
   }
-});
+}
+
+function HowToDialogToggle() {
+  howToDialog.classList.toggle('hidden');
+}
+
+function InfoDialogToggle() {
+  infoDialog.classList.toggle('hidden');
+}
+
+function SetAllLinksExternal() {
+  const shell = require('electron').shell;
+  let _links = document.getElementsByTagName('a');
+  for (let link of _links) {
+    console.log('add event for ' + link.href);
+    link.addEventListener('click', function () {
+      event.preventDefault();
+      shell.openExternal(this.href);
+    })
+  }
+}
 
 function GetDirectories(dirPath) {
   let dir = fs.readdirSync(dirPath);

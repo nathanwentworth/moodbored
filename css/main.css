@@ -70,6 +70,16 @@ section {
   transition: opacity 0.3s;
 }
 
+.how-to {
+  background: #fbfbfb;
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  max-width: 98vw;
+  max-height: 98vh;
+}
+
 input[type=text] {
   border: none;
   border-bottom: 1px solid #000;
@@ -82,7 +92,7 @@ input[type=button] {
   padding: 0.5rem;
   border-radius: 6px;
   background: #f1f2f3;
-  margin-left: 1rem;
+  margin: 1rem 0;
 }
 
 input[type=button]:hover {

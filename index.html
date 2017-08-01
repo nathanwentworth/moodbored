@@ -26,12 +26,38 @@
 
         <label>custom css:</label>
         <input type="text" name="user-styles" id='user-styles-ctrl'>
+
+        <button id="help-ctrl">help!</button>
+        <button id="info-ctrl">about</button>
       </div>
 
     </section>
     <button id="hide-options-button">hide/show</button>
     <section id="right" class="right">
       <div class="images" id="images"></div>
+    </section>
+
+    <section class="how-to hidden" id="how-to">
+      <h1>hey! welcome to moodbored</h1>
+      <h2>how to use this app:</h2>
+      <ol>
+        <li>click on "open folder" in the left sidebar</li>
+        <li>select the folder of stuff you want to load (works best with a folder full of other folders! so, "/main/category/sub-category/", load "main"!)</li>
+        <li>use the left side bar to navigate your folders</li>
+        <li>change your settings as you see fit</li>
+        <li>click the button at the bottom left to hide the settings menu</li>
+      </ol>
+      <button id="how-to-close-ctrl">got it!</button>
+    </section>
+
+    <section class="how-to hidden" id="info">
+      <h1>about moodbored</h1>
+      <p>version: <span id="version-disp"></span></p>
+      <h2>who made this app?</h2>
+      <p><a href="https://nathanwentworth.co">nathan wentworth</a> made this app!</p>
+      <h2>i have an issue! where can i get support?</h2>
+      <p>you can get support for it by: <a href="https://twitter.com/nathanwentworth">tweeting at me</a> or opening an <a href="https://github.com/nathanwentworth/moodbored/issues">issue on github</a>!</p>
+      <button id="info-close-ctrl">okay thanks!</button>
     </section>
     </main>
   </body>
