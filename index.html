@@ -12,33 +12,42 @@
     <section class="left visible" id="left">
 
       <div class="folders" id="folders"></div>
-      <input type="button" name="submit" value='open folder' id='directoryInputSubmit'>
+      <button id='open-folder-ctrl'>open folder</button>
+      <button id='options-ctrl'>options</button>
 
-      <div class="options" id="options-menu">
-        <label>columns: <span id="image-width-label"></span></label>
-        <input type="range" name="image-width" id='image-width-ctrl' min='1' max='9'>
+      <div class="options hidden" id="options-menu">
+        <div>
+          <label>columns: <span id="image-width-label"></span></label>
+          <input type="range" name="image-width" id='image-width-ctrl' min='1' max='9'>
+        </div>
 
-        <label>gutter: <span id="gutter-width-label"></span></label>
-        <input type="range" name="gutter-width" id='gutter-width-ctrl' min='0' max='64'>
+        <div>
+          <label>gutter: <span id="gutter-width-label"></span></label>
+          <input type="range" name="gutter-width" id='gutter-width-ctrl' min='0' max='64'>
+        </div>
 
-        <label>background: <span id="background-label"></span></label>
-        <input type="text" name="background" id='background-ctrl'>
+        <div>
+          <label>background: </label>
+          <input type="text" class="inline" name="background" id='background-ctrl'>
+        </div>
 
-        <label>custom css:</label>
-        <input type="text" name="user-styles" id='user-styles-ctrl'>
+        <div>
+          <label>custom css:</label>
+          <textarea id='user-styles-ctrl'></textarea>
+        </div>
 
         <button id="help-ctrl">help!</button>
         <button id="info-ctrl">about</button>
       </div>
 
     </section>
-    <button id="hide-options-button">hide/show</button>
+    <button id="hide-side-panel-ctrl">hide/show</button>
     <section id="right" class="right">
       <div class="images" id="images"></div>
     </section>
 
     <section class="how-to hidden" id="how-to">
-      <h1>hey! welcome to moodbored</h1>
+      <h1>~~~~~~~~~ welcome to moodbored ~~~~~~~~~</h1>
       <h2>how to use this app:</h2>
       <ol>
         <li>click on "open folder" in the left sidebar</li>
@@ -47,6 +56,7 @@
         <li>change your settings as you see fit</li>
         <li>click the button at the bottom left to hide the settings menu</li>
       </ol>
+      <p>you can open this up again by going to <b>options > help!</b></p>
       <button id="how-to-close-ctrl">got it!</button>
     </section>
 
