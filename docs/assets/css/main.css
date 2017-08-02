@@ -105,7 +105,8 @@ body {
   left: 50%;
   top: 55%;
   transform: translate(-50%, -50%);
-  width: auto; }
+  width: auto;
+  animation: 1s 1 slide-up-header-img; }
 
 .site-title {
   font-size: 4rem;
@@ -175,6 +176,11 @@ footer {
     transform: translateX(-50%) translateY(150%); }
   100% {
     transform: translateX(-50%) translateY(0); } }
+@keyframes slide-up-header-img {
+  0% {
+    transform: translateX(-50%) translateY(50%); }
+  100% {
+    transform: translateX(-50%) translateY(-50%); } }
 /* # extras */
 hr {
   display: block;

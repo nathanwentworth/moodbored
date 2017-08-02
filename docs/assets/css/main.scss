@@ -86,6 +86,7 @@ body {
 	top: 55%;
 	transform: translate(-50%, -50%);
 	width: auto;
+	animation: 1s 1 slide-up-header-img;
 }
 
 .site-title {
@@ -176,6 +177,15 @@ footer {
 	}
 	100% {
 		transform: translateX(-50%) translateY(0);
+	}
+}
+
+@keyframes slide-up-header-img {
+	0% {
+		transform: translateX(-50%) translateY(50%);
+	}
+	100% {
+		transform: translateX(-50%) translateY(-50%);
 	}
 }
 
