@@ -1,0 +1,228 @@
+/* # normalize */
+html {
+  font-family: sans-serif;
+  -ms-text-size-adjust: 100%;
+  -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  padding: 0; }
+
+article, aside, details, figcaption, figure, footer, header, hgroup, main, menu, nav, section, summary {
+  display: block; }
+
+audio, canvas, progress, video {
+  display: inline-block;
+  vertical-align: baseline; }
+
+a {
+  background-color: transparent; }
+
+a:active, a:hover {
+  outline: 0; }
+
+b, strong {
+  font-weight: bold; }
+
+img {
+  border: 0; }
+
+svg:not(:root) {
+  overflow: hidden; }
+
+hr {
+  box-sizing: content-box;
+  height: 0; }
+
+pre {
+  overflow: auto; }
+
+button {
+  overflow: visible; }
+
+audio, canvas, iframe, img, svg, video {
+  vertical-align: middle; }
+
+fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0; }
+
+/* # universal styles */
+::-moz-selection {
+  background: #faa;
+  text-shadow: none; }
+
+::selection {
+  background: #faa;
+  text-shadow: none; }
+
+html, body {
+  color: #222;
+  line-height: 1.375rem;
+  width: 100%;
+  height: 100%;
+  margin: 0; }
+
+/* # defaults */
+* {
+  box-sizing: border-box; }
+
+img {
+  display: block;
+  max-width: 100%; }
+
+pre {
+  background: #eee;
+  padding: 1em;
+  border-radius: 6px;
+  display: inline-block; }
+
+p {
+  line-height: 1.4;
+  max-width: 37rem; }
+
+h1, h2, h3, h4, h5, h6 {
+  color: #55f;
+  max-width: 37rem;
+  line-height: 1; }
+
+/* # site styles */
+body {
+  /*background-color: #f1f2f3;*/ }
+
+.main-header {
+  position: relative;
+  background-color: #faa;
+  /*background-image: url('../img/aleksandra-boguslawska-1510.jpg');*/
+  background-size: cover;
+  background-position: center center;
+  min-height: 80vh; }
+
+.header-screenshot {
+  position: fixed;
+  max-height: 80vh;
+  left: 50%;
+  top: 55%;
+  transform: translate(-50%, -50%);
+  width: auto; }
+
+.site-title {
+  font-size: 4rem;
+  color: #55f;
+  text-align: center;
+  padding: 1.6666666667rem;
+  display: inline-block;
+  margin: auto;
+  background: #f1f2f3; }
+
+.cta {
+  background-color: #55f;
+  color: #fff;
+  font-size: 2rem;
+  padding: 1.6666666667rem;
+  font-weight: bold;
+  text-decoration: none;
+  transition: background-color 0.1s; }
+
+.cta:hover {
+  background-color: #3c3cff; }
+
+.header-cta {
+  position: absolute;
+  bottom: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  animation: 1s 1 slide-up; }
+
+main {
+  position: relative;
+  z-index: 100;
+  background: #f1f2f3; }
+
+section {
+  padding: 2.5rem;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between; }
+
+section:nth-of-type(2n) {
+  background-color: #55f;
+  flex-direction: row-reverse; }
+
+section:nth-of-type(2n + 1) {
+  background-color: #f1f2f3; }
+
+section:nth-of-type(2n) * {
+  color: #f1f2f3; }
+
+.section-image-container {
+  max-width: 50%; }
+
+footer {
+  position: relative;
+  z-index: 1;
+  background-color: #faa;
+  min-height: 25vh;
+  color: #fff;
+  padding: 2.5rem; }
+  footer div {
+    margin: auto; }
+
+@keyframes slide-up {
+  0% {
+    transform: translateX(-50%) translateY(150%); }
+  100% {
+    transform: translateX(-50%) translateY(0); } }
+/* # extras */
+hr {
+  display: block;
+  height: 1px;
+  border: 0;
+  border-top: 1px solid #ccc;
+  margin: 1em 0;
+  padding: 0; }
+
+/* # responsive rules */
+/* ## small screens */
+@media only screen and (max-width: 480px) {
+  h1 {
+    font-size: 2rem; }
+
+  h2 {
+    font-size: 1.625rem; }
+
+  h3 {
+    font-size: 1.375rem; }
+
+  h4 {
+    font-size: 1.125rem; } }
+/* ## tablets and small screens */
+@media only screen and (min-width: 480px) and (max-width: 960px) {
+  h1 {
+    font-size: 2.5rem; }
+
+  h2 {
+    font-size: 2rem; }
+
+  h3 {
+    font-size: 1.5rem; }
+
+  h4 {
+    font-size: 1.125rem; } }
+/* ## normal to large screens */
+@media only screen and (min-width: 960px) {
+  h1 {
+    font-size: 3rem; }
+
+  h2 {
+    font-size: 2.25rem; }
+
+  h3 {
+    font-size: 1.75rem; }
+
+  h4 {
+    font-size: 1.125rem; } }
+
+/*# sourceMappingURL=main.css.map */

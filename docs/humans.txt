@@ -1,0 +1,15 @@
+# humanstxt.org/
+# The humans responsible & technology colophon
+
+# TEAM
+
+    <Nathan Wentworth> -- <Developer> -- <nathanwentworth>
+
+# THANKS
+
+    <>
+
+# TECHNOLOGY COLOPHON
+
+    HTML5, CSS3, JQuery
+    HTML5 Boilerplate
