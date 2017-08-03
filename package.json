@@ -2,7 +2,7 @@
   "name": "moodbored",
   "version": "0.1.0",
   "description": "a moodboard/image viewer",
-  "main": "main.js",
+  "main": "./main.js",
   "scripts": {
     "start": "electron .",
     "package-mac": "electron-packager . --overwrite --platform=darwin --arch=x64 --icon='./icon/icon' --prune=true --ignore='^release-builds$' --out=release-builds",
@@ -25,6 +25,7 @@
     "electron-packager": "^8.1.0"
   },
   "dependencies": {
-    "image-size": "^0.6.0"
+    "image-size": "^0.6.0",
+    "teeny-conf": "^1.1.0"
   }
 }

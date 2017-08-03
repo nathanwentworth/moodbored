@@ -100,6 +100,7 @@ body {
   min-height: 80vh; }
 
 .header-screenshot {
+  will-change: transform;
   position: fixed;
   max-height: 80vh;
   left: 50%;
@@ -109,6 +110,7 @@ body {
   animation: 1s 1 slide-up-header-img; }
 
 .site-title {
+  max-width: 100%;
   font-size: 4rem;
   color: #55f;
   text-align: center;
@@ -130,12 +132,18 @@ body {
   background-color: #3c3cff; }
 
 .header-cta {
+  will-change: transform;
   position: absolute;
   bottom: 1rem;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 100;
-  animation: 1s 1 slide-up; }
+  z-index: 100; }
+
+.header-cta.fixed {
+  position: fixed;
+  top: 0;
+  bottom: initial;
+  z-index: 400; }
 
 main {
   position: relative;
@@ -203,7 +211,12 @@ hr {
     font-size: 1.375rem; }
 
   h4 {
-    font-size: 1.125rem; } }
+    font-size: 1.125rem; }
+
+  .site-title {
+    font-size: 2rem; }
+    .site-title h1 {
+      font-size: 2rem; } }
 /* ## tablets and small screens */
 @media only screen and (min-width: 480px) and (max-width: 960px) {
   h1 {

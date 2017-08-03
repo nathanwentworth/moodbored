@@ -6,6 +6,7 @@ const BrowserWindow = electron.BrowserWindow
 
 const path = require('path')
 const url = require('url')
+const teenyconf = require('./js/main/config.js');
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -13,22 +14,50 @@ let mainWindow
 
 function createWindow () {
   // Create the browser window.
+  let windowWidth = (teenyconf.get('width') != null) ? teenyconf.get('width') : 1024;
+  let windowHeight = (teenyconf.get('height') != null) ? teenyconf.get('height') : 768;
+  let windowX = teenyconf.get('posX');
+  let windowY = teenyconf.get('posY');
+  teenyconf.saveSync();
+
   mainWindow = new BrowserWindow({
-    width: 1024, height: 768,
+    width: windowWidth,
+    height: windowHeight,
+    backgroundColor: '#fbfbfb',
     icon: path.join(__dirname, '/icon/icon.png'),
     minWidth: 600,
     minHeight: 460
   })
 
+  if (windowX != null && windowY != null) {
+    mainWindow.setPosition(windowX, windowY);
+  }
+
   // and load the index.html of the app.
   mainWindow.loadURL(url.format({
-    pathname: path.join(__dirname, 'index.html'),
+    pathname: path.join(__dirname, '/index.html'),
     protocol: 'file:',
     slashes: true
   }))
 
   // Open the DevTools.
-  // mainWindow.webContents.openDevTools()
+  mainWindow.webContents.openDevTools()
+
+  mainWindow.on('close', function () {
+    let width = mainWindow.getSize()[0];
+    let height = mainWindow.getSize()[1];
+
+    let x = mainWindow.getPosition()[0];
+    let y = mainWindow.getPosition()[1];
+
+    teenyconf.set('width', width);
+    teenyconf.set('height', height);
+    teenyconf.set('posX', x);
+    teenyconf.set('posY', y);
+    console.log('saved x: ' + x);
+    teenyconf.saveSync();
+  })
+
 
   // Emitted when the window is closed.
   mainWindow.on('closed', function () {
@@ -61,6 +90,96 @@ app.on('activate', function () {
     console.log(app.getPath('userData'));
   }
 })
+
+const { Menu } = require('electron')
+
+// const template = [
+//   {
+//     label: 'Edit',
+//     submenu: [
+//       {role: 'undo'},
+//       {role: 'redo'},
+//       {type: 'separator'},
+//       {role: 'cut'},
+//       {role: 'copy'},
+//       {role: 'paste'},
+//       {role: 'pasteandmatchstyle'},
+//       {role: 'delete'},
+//       {role: 'selectall'}
+//     ]
+//   },
+//   {
+//     label: 'View',
+//     submenu: [
+//       {role: 'reload'},
+//       {role: 'forcereload'},
+//       {role: 'toggledevtools'},
+//       {type: 'separator'},
+//       {role: 'resetzoom'},
+//       {role: 'zoomin'},
+//       {role: 'zoomout'},
+//       {type: 'separator'},
+//       {role: 'togglefullscreen'}
+//     ]
+//   },
+//   {
+//     role: 'window',
+//     submenu: [
+//       {role: 'minimize'},
+//       {role: 'close'}
+//     ]
+//   },
+//   {
+//     role: 'help',
+//     submenu: [
+//       {
+//         label: 'Learn More',
+//         click () { electron.shell.openExternal('https://github.com/nathanwentworth/moodbored') }
+//       }
+//     ]
+//   }
+// ]
+
+// if (process.platform === 'darwin') {
+//   template.unshift({
+//     label: app.getName(),
+//     submenu: [
+//       {role: 'about'},
+//       {type: 'separator'},
+//       {role: 'services', submenu: []},
+//       {type: 'separator'},
+//       {role: 'hide'},
+//       {role: 'hideothers'},
+//       {role: 'unhide'},
+//       {type: 'separator'},
+//       {role: 'quit'}
+//     ]
+//   })
+
+//   // Edit menu
+//   template[1].submenu.push(
+//     {type: 'separator'},
+//     {
+//       label: 'Speech',
+//       submenu: [
+//         {role: 'startspeaking'},
+//         {role: 'stopspeaking'}
+//       ]
+//     }
+//   )
+
+//   // Window menu
+//   template[3].submenu = [
+//     {role: 'close'},
+//     {role: 'minimize'},
+//     {role: 'zoom'},
+//     {type: 'separator'},
+//     {role: 'front'}
+//   ]
+// }
+
+// const menu = Menu.buildFromTemplate(template)
+// Menu.setApplicationMenu(menu)
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.
