@@ -16,11 +16,14 @@ let currentPath = rootDirectory;
 let imageElements = [];
 
 // container elements
+let body = document.getElementsByTagName('body')[0];
 let mainContainer = document.getElementById('main');
 let leftSide = document.getElementById('left');
 let rightSide = document.getElementById('right');
 let folderView = document.getElementById('folders');
 let imageView = document.getElementById('images');
+let lightbox = document.getElementById('lightbox');
+let lightboxImg = lightbox.getElementsByTagName('img')[0];
 
 // option/input elements
 let optionsMenu = document.getElementById('options-menu');
@@ -114,6 +117,16 @@ function AddEventsToMainButtons() {
     ToggleSection(leftSide);
     ToggleImageContainerSize();
   });
+
+  lightbox.addEventListener('click', function () {
+    ToggleSection(lightbox, true);
+    PreventScroll(false);
+  })
+
+  lightboxImg.addEventListener('click', function () {
+    ToggleSection(lightbox, true);
+    PreventScroll(false);
+  })
 }
 
 function AddEventsToOptionsButtons() {
@@ -300,6 +313,7 @@ function LoadDirectoryContents(path, newRoot) {
   }
 
   function LoadImages(_path) {
+    let _index = 0;
     fs.readdir(_path, (err, dir) => {
       if (dir.length > 0) {
         for (let file of dir) {
@@ -309,7 +323,8 @@ function LoadDirectoryContents(path, newRoot) {
             }
             let imgFileTypes = /.(jpg|png|gif|jpeg|bmp|webp|svg)/;
             if (!stats.isDirectory() && file.match(imgFileTypes)) {
-              CreateImage(_path, file);
+              _index++;
+              CreateImage(_path, file, _index);
             }
           })
         }
@@ -318,7 +333,7 @@ function LoadDirectoryContents(path, newRoot) {
   }
 }
 
-function CreateImage(path, file) {
+function CreateImage(path, file, index) {
   let img = document.createElement('img');
   let src = path + '/' + file;
   let dim = sizeOf(src);
@@ -330,7 +345,18 @@ function CreateImage(path, file) {
   img.onload = function () {
     img.classList.add('img-loaded');
   }
+  img.addEventListener('click', function () {
+    SetLightboxImage(img);
+    PreventScroll(true);
+  })
   imageElements.push(img);
+}
+
+// ~~~~~~~~~ lightbox ~~~~~~~~~
+
+function SetLightboxImage (img) {
+  lightboxImg.src = img.src;
+  ToggleSection(lightbox);
 }
 
 // ~~~~~~~~~ utility functions ~~~~~~~~~
@@ -339,6 +365,10 @@ function ResizeImages() {
   for (let img of imageElements) {
     ResizeImage(img);
   }
+}
+
+function PreventScroll(force) {
+  body.classList.toggle('no-scroll', force);
 }
 
 function ToggleSection(section, force) {

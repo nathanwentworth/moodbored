@@ -67,6 +67,7 @@ section {
   flex-wrap: wrap;
   justify-content: center;
   align-content: center;
+  user-select: none;
 }
 
 .images img {
@@ -143,6 +144,10 @@ label {
 .hidden {
   display: none;
   visibility: hidden;
+}
+
+.no-scroll {
+  overflow: hidden;
 }
 
 

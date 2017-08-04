@@ -1,0 +1,28 @@
+
+.lightbox {
+  z-index: 200;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: #fbfbfb;
+  display: block;
+  visibility: visible;
+}
+
+.lightbox img {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  max-width: 98vw;
+  max-height: 98vh;
+  -webkit-transform: translate(-50%, -50%);
+          transform: translate(-50%, -50%);
+  z-index: -1;
+}
+
+.lightbox-hidden {
+  display: none;
+  visibility: hidden;
+}
