@@ -41,7 +41,7 @@ function createWindow () {
   }))
 
   // Open the DevTools.
-  mainWindow.webContents.openDevTools()
+  // mainWindow.webContents.openDevTools()
 
   mainWindow.on('close', function () {
     let width = mainWindow.getSize()[0];

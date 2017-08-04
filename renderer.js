@@ -53,7 +53,8 @@ let options = {
   columns: 3,
   gutter: 6,
   background: '#f1f2f3',
-  userStyles: ''
+  userStyles: '',
+  sidebar: true
 };
 let lastDirectory = currentPath;
 
@@ -76,6 +77,10 @@ function InitialLoad() {
   AddEventsToOptionsButtons();
   SetAllLinksExternal();
   SetVersionInfo();
+
+  ToggleSection(leftSide, !options.sidebar);
+  ToggleImageContainerSize(!options.sidebar);
+  console.log("sidebar on load " + options.sidebar);
 
   let loadedPath = localStorage.getItem('lastDirectory');
   rootDirectory = localStorage.getItem('rootDirectory');
@@ -115,8 +120,8 @@ function AddEventsToOptionsButtons() {
   columnOption.label.innerText = options.columns;
   columnOption.ctrl.value = options.columns;
   columnOption.ctrl.addEventListener('input', function() {
-    options.columns = columnOption.ctrl.value;
-    columnOption.label.innerText = columnOption.ctrl.value;
+    options.columns = this.value;
+    columnOption.label.innerText = this.value;
     if (imageElements.length > 0) {
       ResizeImages();
     }
@@ -126,8 +131,8 @@ function AddEventsToOptionsButtons() {
   gutterOption.label.innerText = options.gutter;
   gutterOption.ctrl.value = options.gutter;
   gutterOption.ctrl.addEventListener('input', function() {
-    options.gutter = gutterOption.ctrl.value;
-    gutterOption.label.innerText = gutterOption.ctrl.value;
+    options.gutter = this.value;
+    gutterOption.label.innerText = this.value;
     if (imageElements.length > 0) {
       ResizeImages();
     }
@@ -137,7 +142,7 @@ function AddEventsToOptionsButtons() {
   backgroundOptionCtrl.value = options.background;
   mainContainer.style.backgroundColor = options.background;
   backgroundOptionCtrl.addEventListener('input', function() {
-    options.background = backgroundOptionCtrl.value;
+    options.background = this.value;
     mainContainer.style.backgroundColor = options.background;
     SaveOptions();
   });
@@ -145,7 +150,7 @@ function AddEventsToOptionsButtons() {
   userStylesCtrl.value = options.userStyles;
   userStylesElem.innerText = options.userStyles;
   userStylesCtrl.addEventListener('input', function() {
-    options.userStyles = userStylesCtrl.value;
+    options.userStyles = this.value;
     userStylesElem.innerText = options.userStyles;
     SaveOptions();
   });
@@ -164,6 +169,13 @@ function AddEventsToOptionsButtons() {
 
   infoCloseCtrl.addEventListener('click', function () {
     ToggleSection(infoDialog);
+  });
+
+  window.addEventListener('keydown', function (e) {
+    if (e.keyCode == 27) {
+      ToggleSection(leftSide);
+      ToggleImageContainerSize();
+    }
   });
 }
 
@@ -329,12 +341,14 @@ function ResizeImages() {
   }
 }
 
-function ToggleSection(section) {
-  section.classList.toggle('hidden');
+function ToggleSection(section, force) {
+  section.classList.toggle('hidden', force);
 }
 
-function ToggleImageContainerSize() {
-  rightSide.classList.toggle('expand');
+function ToggleImageContainerSize(force) {
+  options.sidebar = !rightSide.classList.toggle('expand', force);
+  console.log("sidebar on save: " + options.sidebar);
+  SaveOptions();
 }
 
 function ResizeImage(img) {
