@@ -31,6 +31,7 @@ section {
   width: 300px;
   overflow: scroll;
   padding-bottom: 3rem;
+  box-shadow: 0 0 8px #c1c2c3;
 }
 .right {
   width: calc(100% - 300px);
@@ -55,6 +56,7 @@ section {
 
 .folders button:hover {
   color: #f00;
+  background-color: transparent;
 }
 
 .options div {
@@ -83,13 +85,15 @@ section {
 }
 
 .how-to {
-  background: #fbfbfb;
+  background: #fff;
+  border-radius: 6px;
   position: fixed;
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
   max-width: 98vw;
   max-height: 98vh;
+  box-shadow: 0 0 16px #c1c2c3;
 }
 
 label {
@@ -107,7 +111,7 @@ input[type=text].inline {
   padding: 0;
 }
 
-input[type=button] {
+input[type=button], button {
   border: none;
   padding: 0.5rem;
   border-radius: 6px;
@@ -116,13 +120,20 @@ input[type=button] {
 }
 
 
-input[type=button]:hover {
+input[type=button]:hover, button:hover {
   background: #f00;
   color: #fff;
 }
 
 input[type=range] {
   display: block;
+}
+
+textarea {
+  background-color: #f1f2f3;
+  border: none;
+  border-radius: 6px;
+  max-width: 100%;
 }
 
 button {
@@ -132,7 +143,7 @@ button {
 
 label {
   /*display: block;*/
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
 }
 
 #hide-side-panel-ctrl {
