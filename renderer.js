@@ -47,9 +47,14 @@ let dropzone = {
         let reader = new FileReader();
         reader.readAsDataURL(file);
         reader.onload = function (_e) {
-          console.log(file.path + ' is done loading');
-          fs.createReadStream(file.path).pipe(fs.createWriteStream(currentPath + '/' + file.name));
-          CreateImage(currentPath, file.name);
+          let readStream = fs.createReadStream(file.path);
+          readStream.on('open', function () {
+            let writeStream = fs.createWriteStream(currentPath + '/' + file.name)
+            readStream.pipe(writeStream);
+            readStream.on('end', function() {
+              CreateImage(currentPath, file.name, true);
+            });
+          })
         }
       }
     }
@@ -353,7 +358,7 @@ function LoadDirectoryContents(path, newRoot) {
             }
             if (!stats.isDirectory() && file.match(imgFileTypes)) {
               _index++;
-              CreateImage(_path, file, _index);
+              CreateImage(_path, file);
             }
           })
         }
@@ -362,14 +367,17 @@ function LoadDirectoryContents(path, newRoot) {
   }
 }
 
-function CreateImage(path, file, index) {
-  console.log('path: ' + path + ', file: ' + file);
-  let img = document.createElement('img');
+function CreateImage(path, file, dropped) {
+  // console.log('path: ' + path + ', file: ' + file);
+  let img = new Image();
   let src = path + '/' + file;
   img.src = src;
   ResizeImage(img);
   imageView.appendChild(img);
   img.onload = function () {
+    img.classList.add('img-loaded');
+  }
+  if (dropped) {
     img.classList.add('img-loaded');
   }
   img.addEventListener('click', function () {
