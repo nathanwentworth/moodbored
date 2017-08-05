@@ -39,20 +39,24 @@ let gutterOption = {
 
 let dropzone = {
   elem: document.getElementById('image-drop'),
-  drop: function (e) {
-    console.log('drop');
+  drop: function (e, altPath) {
     let files = e.dataTransfer.files;
     for (let file of files) {
-      console.log('trying to upload ' + file.path);
       if (file.type.match(imgFileTypes)) {
         let reader = new FileReader();
         reader.readAsDataURL(file);
         reader.onload = function (_e) {
           let readStream = fs.createReadStream(file.path);
           readStream.on('open', function () {
-            let path = currentPath + '/' + file.name;
+            let _currentPath = currentPath;
+            if (altPath != null && altPath != undefined && altPath != '') {
+              _currentPath = altPath;
+            }
+            console.log('_currentPath: ' + _currentPath);
+            let path = _currentPath + '/' + file.name;
+            console.log('final path: ' + path);
             if (!fs.existsSync(path)) {
-              let writeStream = fs.createWriteStream()
+              let writeStream = fs.createWriteStream(path)
               readStream.pipe(writeStream);
               readStream.on('end', function() {
                 CreateImage(currentPath, file.name, true);
@@ -364,6 +368,19 @@ function CreateFolderView() {
     sp.addEventListener('click', function() {
       LoadDirectoryContents(totalPath);
     });
+
+    sp.addEventListener('dragover', function (e) {
+      e.stopPropagation();
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'copy';
+    }, false);
+
+    sp.addEventListener('drop', function (e) {
+      e.stopPropagation();
+      e.preventDefault();
+      console.log('dropped on folder')
+      dropzone.drop(e, totalPath);
+    }, false)
 
     folderView.appendChild(sp);
   }
