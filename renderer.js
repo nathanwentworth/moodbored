@@ -22,8 +22,6 @@ let leftSide = document.getElementById('left');
 let rightSide = document.getElementById('right');
 let folderView = document.getElementById('folders');
 let imageView = document.getElementById('images');
-let lightbox = document.getElementById('lightbox');
-let lightboxImg = lightbox.getElementsByTagName('img')[0];
 
 // option/input elements
 let optionsMenu = document.getElementById('options-menu');
@@ -118,13 +116,13 @@ function AddEventsToMainButtons() {
     ToggleImageContainerSize();
   });
 
-  lightbox.addEventListener('click', function () {
-    ToggleSection(lightbox, true);
+  lightbox.elem.addEventListener('click', function () {
+    ToggleSection(lightbox.elem, true);
     PreventScroll(false);
   })
 
-  lightboxImg.addEventListener('click', function () {
-    ToggleSection(lightbox, true);
+  lightbox.img.addEventListener('click', function () {
+    ToggleSection(lightbox.elem, true);
     PreventScroll(false);
   })
 }
@@ -346,7 +344,8 @@ function CreateImage(path, file, index) {
     img.classList.add('img-loaded');
   }
   img.addEventListener('click', function () {
-    SetLightboxImage(img);
+    // SetLightboxImage(img);
+    lightbox.setImg(img);
     PreventScroll(true);
   })
   imageElements.push(img);
@@ -354,9 +353,13 @@ function CreateImage(path, file, index) {
 
 // ~~~~~~~~~ lightbox ~~~~~~~~~
 
-function SetLightboxImage (img) {
-  lightboxImg.src = img.src;
-  ToggleSection(lightbox);
+let lightbox = {
+  elem: document.getElementById('lightbox'),
+  img: document.getElementById('lightboxImg'),
+  setImg: function (_img) {
+    this.img.src = _img.src;
+    ToggleSection(this.elem);
+  }
 }
 
 // ~~~~~~~~~ utility functions ~~~~~~~~~
