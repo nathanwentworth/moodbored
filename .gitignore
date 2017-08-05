@@ -44,3 +44,4 @@
 /mood/*
 /release-builds/*
 .sass-cache/
+config.json
