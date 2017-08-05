@@ -120,8 +120,7 @@ body {
   display: inline-block;
   margin: auto;
   background: #f1f2f3;
-  border-bottom-right-radius: 6px;
-  box-shadow: 0 0 16px #838c95; }
+  border-bottom-right-radius: 6px; }
 
 .cta {
   background-color: #55f;
@@ -131,8 +130,7 @@ body {
   font-weight: bold;
   text-decoration: none;
   transition: background-color 0.1s;
-  border-radius: 6px;
-  box-shadow: 0 0 16px #000055; }
+  border-radius: 6px; }
 
 .cta:hover {
   background-color: #3c3cff; }
@@ -170,8 +168,7 @@ section {
 section:nth-of-type(2n) {
   background-color: #55f;
   flex-direction: row-reverse;
-  border-radius: 6px;
-  box-shadow: 0 0 16px #000055; }
+  border-radius: 6px; }
 
 section:nth-of-type(2n) * {
   color: #f1f2f3; }

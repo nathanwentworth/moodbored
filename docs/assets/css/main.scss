@@ -102,7 +102,6 @@ body {
 	margin: auto;
 	background: $background-color;
 	border-bottom-right-radius: 6px;
-	box-shadow: 0 0 16px darken($background-color, 40%);;
 }
 
 .cta {
@@ -114,7 +113,6 @@ body {
 	text-decoration: none;
 	transition: background-color 0.1s;
 	border-radius: 6px;
-	box-shadow: 0 0 16px darken($primary-color, 50%);
 }
 
 .cta:hover {
@@ -160,7 +158,6 @@ section:nth-of-type(2n) {
 	background-color: $primary-color;
 	flex-direction: row-reverse;
 	border-radius: 6px;
-	box-shadow: 0 0 16px darken($primary-color, 50%);
 }
 section:nth-of-type(2n + 1) {
 	// background-color: $background-color;

@@ -34,12 +34,25 @@ section {
   box-shadow: 0 0 8px #c1c2c3;
 }
 .right {
+  position: relative;
   width: calc(100% - 300px);
   margin-left: auto;
 }
 .right.expand {
   width: 100%;
   margin-left: 16px;
+}
+
+.dropzone {
+  width: 100%;
+  height: 100vh;
+  background-color: rgba(216, 232, 248, 0.9);
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .folders {

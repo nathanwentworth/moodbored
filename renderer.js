@@ -5,7 +5,6 @@ const moodbored = 'moodbored';
 const {dialog} = require('electron').remote;
 
 // requires
-const sizeOf = require('image-size');
 const fs = require('fs');
 
 // directory variables
@@ -14,6 +13,7 @@ let currentPath = rootDirectory;
 
 // temporary element storage
 let imageElements = [];
+let imgFileTypes = /.(jpg|png|gif|jpeg|bmp|webp|svg)/;
 
 // container elements
 let body = document.getElementsByTagName('body')[0];
@@ -36,6 +36,38 @@ let gutterOption = {
   ctrl: document.getElementById('gutter-width-ctrl'),
   label: document.getElementById('gutter-width-label')
 }
+
+let dropzone = {
+  elem: document.getElementById('image-drop'),
+  drop: function (e) {
+    console.log('drop');
+    let files = e.dataTransfer.files;
+    for (let file of files) {
+      if (file.type.match(imgFileTypes)) {
+        let reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = function (_e) {
+          console.log(file.path + ' is done loading');
+          fs.createReadStream(file.path).pipe(fs.createWriteStream(currentPath + '/' + file.name));
+          CreateImage(currentPath, file.name);
+        }
+      }
+    }
+  }
+}
+
+imageView.addEventListener('dragover', function (e) {
+  e.stopPropagation();
+  e.preventDefault();
+  console.log('drag over');
+  e.dataTransfer.dropEffect = 'copy';
+}, false)
+
+imageView.addEventListener('drop', function (e) {
+  e.stopPropagation();
+  e.preventDefault();
+  dropzone.drop(e);
+}, false)
 
 let backgroundOptionCtrl = document.getElementById('background-ctrl');
 let userStylesCtrl = document.getElementById('user-styles-ctrl');;
@@ -319,7 +351,6 @@ function LoadDirectoryContents(path, newRoot) {
             if (err) {
               return console.error(file + ': ' + err);
             }
-            let imgFileTypes = /.(jpg|png|gif|jpeg|bmp|webp|svg)/;
             if (!stats.isDirectory() && file.match(imgFileTypes)) {
               _index++;
               CreateImage(_path, file, _index);
@@ -332,19 +363,16 @@ function LoadDirectoryContents(path, newRoot) {
 }
 
 function CreateImage(path, file, index) {
+  console.log('path: ' + path + ', file: ' + file);
   let img = document.createElement('img');
   let src = path + '/' + file;
-  let dim = sizeOf(src);
   img.src = src;
-  img.height = dim.height;
-  img.width = dim.width;
   ResizeImage(img);
   imageView.appendChild(img);
   img.onload = function () {
     img.classList.add('img-loaded');
   }
   img.addEventListener('click', function () {
-    // SetLightboxImage(img);
     lightbox.setImg(img);
     PreventScroll(true);
   })
