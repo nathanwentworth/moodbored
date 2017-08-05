@@ -43,17 +43,23 @@ let dropzone = {
     console.log('drop');
     let files = e.dataTransfer.files;
     for (let file of files) {
+      console.log('trying to upload ' + file.path);
       if (file.type.match(imgFileTypes)) {
         let reader = new FileReader();
         reader.readAsDataURL(file);
         reader.onload = function (_e) {
           let readStream = fs.createReadStream(file.path);
           readStream.on('open', function () {
-            let writeStream = fs.createWriteStream(currentPath + '/' + file.name)
-            readStream.pipe(writeStream);
-            readStream.on('end', function() {
-              CreateImage(currentPath, file.name, true);
-            });
+            let path = currentPath + '/' + file.name;
+            if (!fs.existsSync(path)) {
+              let writeStream = fs.createWriteStream()
+              readStream.pipe(writeStream);
+              readStream.on('end', function() {
+                CreateImage(currentPath, file.name, true);
+              });
+            } else {
+              window.alert(path + ' already exists');
+            }
           })
         }
       }
@@ -61,17 +67,56 @@ let dropzone = {
   }
 }
 
+dropzone.elem.addEventListener('dragover', function (e) {
+  e.stopPropagation();
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'copy';
+}, false)
+
 imageView.addEventListener('dragover', function (e) {
   e.stopPropagation();
   e.preventDefault();
-  console.log('drag over');
   e.dataTransfer.dropEffect = 'copy';
+}, false)
+
+imageView.addEventListener('dragenter', function (e) {
+  e.stopPropagation();
+  e.preventDefault();
+  console.log('dragenter');
+  if (dropzone.elem.classList.contains('hidden')) {
+    dropzone.elem.classList.remove('hidden');
+  }
+}, false)
+
+dropzone.elem.addEventListener('dragleave', function (e) {
+  e.stopPropagation();
+  e.preventDefault();
+  console.log('dragleave');
+  if (!dropzone.elem.classList.contains('hidden')) {
+    dropzone.elem.classList.add('hidden');
+  }
 }, false)
 
 imageView.addEventListener('drop', function (e) {
   e.stopPropagation();
   e.preventDefault();
+  console.log('dropped on imageview')
   dropzone.drop(e);
+  if (!dropzone.elem.classList.contains('hidden')) {
+    dropzone.elem.classList.add('hidden');
+  }
+
+}, false)
+
+dropzone.elem.addEventListener('drop', function (e) {
+  e.stopPropagation();
+  e.preventDefault();
+  console.log('dropped on dropzone')
+  dropzone.drop(e);
+  if (!dropzone.elem.classList.contains('hidden')) {
+    dropzone.elem.classList.add('hidden');
+  }
+
 }, false)
 
 let backgroundOptionCtrl = document.getElementById('background-ctrl');
