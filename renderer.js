@@ -13,6 +13,7 @@ let currentPath = rootDirectory;
 
 // temporary element storage
 let imageElements = [];
+let imageSrcs = [];
 let imgFileTypes = /.(jpg|png|gif|jpeg|bmp|webp|svg)/;
 
 // container elements
@@ -269,9 +270,19 @@ function AddEventsToOptionsButtons() {
   });
 
   window.addEventListener('keydown', function (e) {
-    if (e.keyCode == 27) {
-      ToggleSection(leftSide);
-      ToggleImageContainerSize();
+    if (!lightbox.elem.classList.contains('hidden')) {
+      if (e.keyCode == 27) {
+        ToggleSection(lightbox.elem);
+      } else if (e.keyCode == 37) {
+        lightbox.increment(-1);
+      } else if (e.keyCode == 39) {
+        lightbox.increment(1);
+      }
+    } else {
+      if (e.keyCode == 27) {
+        ToggleSection(leftSide);
+        ToggleImageContainerSize();
+      }
     }
   });
 }
@@ -409,20 +420,29 @@ function LoadDirectoryContents(path, newRoot) {
     LoadImages(currentPath);
   }
 
-  function LoadImages(_path) {
-    let _index = 0;
-    fs.readdir(_path, (err, dir) => {
+  function LoadImages(currentPath) {
+    imageSrcs = [];
+    fs.readdir(currentPath, (err, dir) => {
       if (dir.length > 0) {
-        for (let file of dir) {
-          fs.lstat(_path + '//' + file, function (err, stats) {
-            if (err) {
-              return console.error(file + ': ' + err);
+        // filter the directory for only image files
+        let filteredDir = dir.filter((f) => {
+          return f.match(imgFileTypes);
+        });
+
+        let _index = 0;
+        for (let file of filteredDir) {
+          _index++;
+          imageSrcs.push(file);
+          if (_index >= filteredDir.length) {
+            // done loading all images
+            // sort array
+            imageSrcs = imageSrcs.sort();
+            // then create elements
+            for (let img of imageSrcs) {
+              CreateImage(currentPath, img);
             }
-            if (!stats.isDirectory() && file.match(imgFileTypes)) {
-              _index++;
-              CreateImage(_path, file);
-            }
-          })
+            console.log('!!!!!!!!! done loading all images !!!!!!!!!');
+          }
         }
       }
     })
@@ -442,8 +462,10 @@ function CreateImage(path, file, dropped) {
   if (dropped) {
     img.classList.add('img-loaded');
   }
+  let _index = imageElements.length + 1
   img.addEventListener('click', function () {
     lightbox.setImg(img);
+    lightbox.index = _index;
     PreventScroll(true);
   })
   imageElements.push(img);
@@ -454,9 +476,19 @@ function CreateImage(path, file, dropped) {
 let lightbox = {
   elem: document.getElementById('lightbox'),
   img: document.getElementById('lightboxImg'),
+  index: 0,
   setImg: function (_img) {
     this.img.src = _img.src;
     ToggleSection(this.elem);
+  },
+  increment: function (amount) {
+    this.index += amount;
+    if (this.index < 0) {
+      this.index = imageElements.length - 1;
+    } else if (this.index >= imageElements.length) {
+      this.index = 0;
+    }
+    this.img.src = imageElements[this.index].src;
   }
 }
 
