@@ -273,6 +273,7 @@ function AddEventsToOptionsButtons() {
     if (!lightbox.elem.classList.contains('hidden')) {
       if (e.keyCode == 27) {
         ToggleSection(lightbox.elem);
+        PreventScroll(false);
       } else if (e.keyCode == 37 || e.keyCode == 65) {
         lightbox.increment(-1);
       } else if (e.keyCode == 39 || e.keyCode == 68) {
