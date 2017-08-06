@@ -44,18 +44,22 @@ section {
 }
 
 .dropzone {
-  width: 100%;
+  position: fixed;
+  width: calc(100vw - 300px);
   height: 100vh;
   color: #fff;
   font-weight: bold;
   background-color: rgba(16, 32, 48, 0.9);
-  position: absolute;
   top: 0;
   right: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   user-select: none;
+}
+
+.right.expand .dropzone {
+  width: 100vw;
 }
 
 .folders {
@@ -167,6 +171,7 @@ label {
   position: fixed;
   left: 16px;
   bottom: 16px;
+  z-index: 1000;
 }
 
 .hidden {
