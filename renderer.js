@@ -168,7 +168,6 @@ function InitialLoad() {
 
   ToggleSection(leftSide, !options.sidebar);
   ToggleImageContainerSize(!options.sidebar);
-  console.log("sidebar on load " + options.sidebar);
 
   let loadedPath = localStorage.getItem('lastDirectory');
   rootDirectory = localStorage.getItem('rootDirectory');
@@ -311,7 +310,7 @@ function LoadOptions() {
   _options = localStorage.getItem('options');
   if (_options != null) {
     options = JSON.parse(_options);
-    console.log("successfully loaded options");
+    console.log("> successfully loaded options");
   } else {
     console.log("no options saved in local storage, going with defaults");
   }
@@ -319,14 +318,13 @@ function LoadOptions() {
 
 function SaveOptions() {
   localStorage.setItem('options', JSON.stringify(options));
-  console.log('saved options');
+  console.log('> saved options');
 }
 
 function SetAllLinksExternal() {
   const shell = require('electron').shell;
   let _links = document.getElementsByTagName('a');
   for (let link of _links) {
-    console.log('add event for ' + link.href);
     link.addEventListener('click', function () {
       event.preventDefault();
       shell.openExternal(this.href);
@@ -511,7 +509,6 @@ function ToggleSection(section, force) {
 
 function ToggleImageContainerSize(force) {
   options.sidebar = !rightSide.classList.toggle('expand', force);
-  console.log("sidebar on save: " + options.sidebar);
   SaveOptions();
 }
 
@@ -521,9 +518,7 @@ function ResizeImage(img) {
 }
 
 function ClearChildren(parent) {
-  console.log('clearing all children elements of ' + parent.id);
   while (parent.firstChild) {
     parent.removeChild(parent.firstChild);
   }
-  console.log('done clearing elements of ' + parent.id);
 }
