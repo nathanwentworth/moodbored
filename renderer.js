@@ -1,3 +1,7 @@
+'use strict';
+
+
+
 // This file is required by the index.html file and will
 // be executed in the renderer process for that window.
 // All of the Node.js APIs are available in this process.
@@ -42,33 +46,82 @@ let dropzone = {
   elem: document.getElementById('image-drop'),
   drop: function (e, altPath) {
     let files = e.dataTransfer.files;
-    for (let file of files) {
-      if (file.type.match(imgFileTypes)) {
-        let reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = function (_e) {
-          let readStream = fs.createReadStream(file.path);
-          readStream.on('open', function () {
-            let _currentPath = currentPath;
-            if (altPath != null && altPath != undefined && altPath != '') {
-              _currentPath = altPath;
-            }
-            console.log('_currentPath: ' + _currentPath);
-            let path = _currentPath + '/' + file.name;
-            console.log('final path: ' + path);
-            if (!fs.existsSync(path)) {
-              let writeStream = fs.createWriteStream(path)
-              readStream.pipe(writeStream);
-              readStream.on('end', function() {
-                CreateImage(currentPath, file.name, true);
-              });
-            } else {
-              window.alert(path + ' already exists');
-            }
-          })
+    let data = e.dataTransfer.getData('text/html');
+    data = data.substring(data.indexOf('src="') + 5);
+    let imgSrc = /http[^"\n\r]*(?=")/i;
+    let dataUrl = data.match(imgSrc);
+
+    if (dataUrl == null) {
+      for (let file of files) {
+        if (file.type.match(imgFileTypes)) {
+          let reader = new FileReader();
+          reader.readAsDataURL(file);
+          reader.onload = function (_e) {
+            let readStream = fs.createReadStream(file.path);
+            readStream.on('open', function () {
+              let _currentPath = currentPath;
+              if (altPath != null && altPath != undefined && altPath != '') {
+                _currentPath = altPath;
+              }
+              console.log('_currentPath: ' + _currentPath);
+              let path = _currentPath + '/' + file.name;
+              console.log('final path: ' + path);
+              if (!fs.existsSync(path)) {
+                let writeStream = fs.createWriteStream(path)
+                readStream.pipe(writeStream);
+                readStream.on('end', function() {
+                  CreateImage(currentPath, file.name, true);
+                });
+              } else {
+                window.alert(path + ' already exists');
+              }
+            })
+          }
         }
       }
+    } else {
+      dataUrl = dataUrl[0];
+      if (dataUrl.match(imgFileTypes)) {
+        fetch(dataUrl)
+          .then(res => res.blob()) // Gets the response and returns it as a blob
+          .then(blob => {
+            // Here's where you get access to the blob
+            // And you can use it for whatever you want
+            // Like calling ref().put(blob)
+
+            // Here, I use it to make an image appear on the page
+            let reader = new FileReader();
+            if (blob != null) {
+              reader.readAsDataURL(blob);
+              reader.onload = function (_e) {
+                let readStream = fs.createReadStream(blob.path);
+                readStream.on('open', function () {
+                  let _currentPath = currentPath;
+                  if (altPath != null && altPath != undefined && altPath != '') {
+                    _currentPath = altPath;
+                  }
+                  console.log('_currentPath: ' + _currentPath);
+                  let path = _currentPath + '/' + blob.name;
+                  console.log('final path: ' + path);
+                  if (!fs.existsSync(path)) {
+                    let writeStream = fs.createWriteStream(path)
+                    readStream.pipe(writeStream);
+                    readStream.on('end', function() {
+                      CreateImage(currentPath, blob.name, true);
+                    });
+                  } else {
+                    window.alert(path + ' already exists');
+                  }
+                })
+              }
+            } else {
+              console.error(blob);
+            }
+        });
+
+      }
     }
+
   }
 }
 
@@ -307,7 +360,7 @@ function OpenNewRootFolder() {
 }
 
 function LoadOptions() {
-  _options = localStorage.getItem('options');
+  let _options = localStorage.getItem('options');
   if (_options != null) {
     options = JSON.parse(_options);
     console.log("> successfully loaded options");
