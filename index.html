@@ -19,22 +19,27 @@
       <div class="options hidden" id="options-menu">
         <div>
           <label>columns: <span id="image-width-label"></span></label>
-          <input type="range" name="image-width" id='image-width-ctrl' min='1' max='9'>
+          <input type="range" id='image-width-ctrl' min='1' max='9'>
         </div>
 
         <div>
           <label>gutter: <span id="gutter-width-label"></span></label>
-          <input type="range" name="gutter-width" id='gutter-width-ctrl' min='0' max='64'>
+          <input type="range" id='gutter-width-ctrl' min='0' max='64'>
         </div>
 
         <div>
           <label>background: </label>
-          <input type="text" class="inline" name="background" id='background-ctrl'>
+          <input type="text" class="inline" id='background-ctrl'>
         </div>
 
         <div>
           <label>custom css:</label>
           <textarea id='user-styles-ctrl'></textarea>
+        </div>
+
+        <div>
+          <label>move files:</label>
+          <input type="checkbox" id="move-files-ctrl">
         </div>
 
         <button id="help-ctrl">help!</button>

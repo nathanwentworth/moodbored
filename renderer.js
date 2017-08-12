@@ -57,6 +57,7 @@ let dropzone = {
           let reader = new FileReader();
           reader.readAsDataURL(file);
           reader.onload = function (_e) {
+            console.log(file);
             let readStream = fs.createReadStream(file.path);
             readStream.on('open', function () {
               let _currentPath = currentPath;
@@ -71,6 +72,9 @@ let dropzone = {
                 readStream.pipe(writeStream);
                 readStream.on('end', function() {
                   CreateImage(currentPath, file.name, true);
+                  if (options.moveFile) {
+                    fs.unlinkSync(file.path);
+                  }
                 });
               } else {
                 window.alert(path + ' already exists');
@@ -85,15 +89,12 @@ let dropzone = {
         fetch(dataUrl)
           .then(res => res.blob()) // Gets the response and returns it as a blob
           .then(blob => {
-            // Here's where you get access to the blob
-            // And you can use it for whatever you want
-            // Like calling ref().put(blob)
-
-            // Here, I use it to make an image appear on the page
             let reader = new FileReader();
             if (blob != null) {
               reader.readAsDataURL(blob);
               reader.onload = function (_e) {
+                console.log(blob);
+                console.log(blob.path);
                 let readStream = fs.createReadStream(blob.path);
                 readStream.on('open', function () {
                   let _currentPath = currentPath;
@@ -188,6 +189,7 @@ let howToDialog = document.getElementById('how-to');
 let infoDialog = document.getElementById('info');
 let howToCloseCtrl = document.getElementById('how-to-close-ctrl');
 let infoCloseCtrl = document.getElementById('info-close-ctrl');
+let moveFilesCtrl = document.getElementById('move-files-ctrl');
 
 // global options
 let options = {
@@ -195,7 +197,8 @@ let options = {
   gutter: 6,
   background: '#f1f2f3',
   userStyles: '',
-  sidebar: true
+  sidebar: true,
+  moveFile: false
 };
 let lastDirectory = currentPath;
 
@@ -303,6 +306,13 @@ function AddEventsToOptionsButtons() {
     options.userStyles = this.value;
     userStylesElem.innerText = options.userStyles;
     SaveOptions();
+  });
+
+  moveFilesCtrl.checked = options.moveFile;
+  moveFilesCtrl.addEventListener('click', function() {
+    options.moveFile = this.checked;
+    SaveOptions();
+    console.log(options.moveFile);
   });
 
   helpButton.addEventListener('click', function () {
