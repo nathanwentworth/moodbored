@@ -179,6 +179,7 @@ let infoDialog = document.getElementById('info');
 let howToCloseCtrl = document.getElementById('how-to-close-ctrl');
 let infoCloseCtrl = document.getElementById('info-close-ctrl');
 let moveFilesCtrl = document.getElementById('move-files-ctrl');
+let confirmDeleteCtrl = document.getElementById('confirm-delete-ctrl');
 
 // global options
 let options = {
@@ -187,7 +188,8 @@ let options = {
   background: '#f1f2f3',
   userStyles: '',
   sidebar: true,
-  moveFile: false
+  moveFile: false,
+  confirmDelete: true
 };
 let lastDirectory = currentPath;
 
@@ -302,6 +304,13 @@ function AddEventsToOptionsButtons() {
     options.moveFile = this.checked;
     SaveOptions();
     console.log(options.moveFile);
+  });
+
+  confirmDeleteCtrl.checked = options.confirmDelete;
+  confirmDeleteCtrl.addEventListener('click', function() {
+    options.confirmDelete = this.checked;
+    SaveOptions();
+    console.log(options.confirmDelete);
   });
 
   helpButton.addEventListener('click', function () {
@@ -587,8 +596,9 @@ function CreateRightClickMenu(target) {
   if (src != null && src.match(imgFileTypes)) {
     src = src.replace(/%20/g, ' ');
     src = src.replace(/file:\/\//g, '');
+    let _name = src.substring(src.lastIndexOf('/')+1);
     rightClickMenu.append(new MenuItem({
-      label: src.substring(src.lastIndexOf('/')+1),
+      label: _name,
       enabled: false
     }));
 
@@ -599,10 +609,17 @@ function CreateRightClickMenu(target) {
     rightClickMenu.append(new MenuItem({
       label: 'Delete Image',
       click() {
-        console.log(src);
-        trash(src).then(() => {
-          target.remove();
-        });
+        if (options.confirmDelete) {
+          if (window.confirm("Are you sure you want to delete \"" + _name + "\"?")) {
+            trash(src).then(() => {
+              target.remove();
+            });
+          }
+        } else {
+          trash(src).then(() => {
+            target.remove();
+          });
+        }
       }
     }));
   }
