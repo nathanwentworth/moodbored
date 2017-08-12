@@ -10,6 +10,7 @@ const {dialog} = require('electron').remote;
 
 // requires
 const fs = require('fs');
+const request = require('request');
 
 // directory variables
 let rootDirectory = '';
@@ -86,40 +87,26 @@ let dropzone = {
     } else {
       dataUrl = dataUrl[0];
       if (dataUrl.match(imgFileTypes)) {
-        fetch(dataUrl)
-          .then(res => res.blob()) // Gets the response and returns it as a blob
-          .then(blob => {
-            let reader = new FileReader();
-            if (blob != null) {
-              reader.readAsDataURL(blob);
-              reader.onload = function (_e) {
-                console.log(blob);
-                console.log(blob.path);
-                let readStream = fs.createReadStream(blob.path);
-                readStream.on('open', function () {
-                  let _currentPath = currentPath;
-                  if (altPath != null && altPath != undefined && altPath != '') {
-                    _currentPath = altPath;
-                  }
-                  console.log('_currentPath: ' + _currentPath);
-                  let path = _currentPath + '/' + blob.name;
-                  console.log('final path: ' + path);
-                  if (!fs.existsSync(path)) {
-                    let writeStream = fs.createWriteStream(path)
-                    readStream.pipe(writeStream);
-                    readStream.on('end', function() {
-                      CreateImage(currentPath, blob.name, true);
-                    });
-                  } else {
-                    window.alert(path + ' already exists');
-                  }
-                })
-              }
-            } else {
-              console.error(blob);
-            }
-        });
+        let _dataFileName = dataUrl.substring(dataUrl.lastIndexOf('/')+1);
+        console.log(_dataFileName);
 
+        let _currentPath = currentPath;
+        if (altPath != null && altPath != undefined && altPath != '') {
+          _currentPath = altPath;
+        }
+        console.log('_currentPath: ' + _currentPath);
+        let path = _currentPath + '/' + _dataFileName;
+        console.log('final path: ' + path);
+        if (!fs.existsSync(path)) {
+          let writeStream = fs.createWriteStream(path);
+          let r = request(dataUrl);
+          r.pipe(writeStream);
+          r.on('end', function() {
+            CreateImage(currentPath, _dataFileName, true);
+          });
+        } else {
+          window.alert(path + ' already exists');
+        }
       }
     }
 
