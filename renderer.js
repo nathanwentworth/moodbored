@@ -6,7 +6,9 @@
 // be executed in the renderer process for that window.
 // All of the Node.js APIs are available in this process.
 const moodbored = 'moodbored';
-const {dialog} = require('electron').remote;
+const { remote } = require('electron');
+const { Menu, MenuItem } = remote;
+const { dialog } = remote;
 
 // requires
 const fs = require('fs');
@@ -338,7 +340,7 @@ function AddEventsToOptionsButtons() {
 }
 
 function SetVersionInfo() {
-  document.getElementById('version-disp').innerText = require('electron').remote.app.getVersion();
+  document.getElementById('version-disp').innerText = remote.app.getVersion();
 }
 
 function OpenNewRootFolder() {
@@ -572,3 +574,38 @@ function ClearChildren(parent) {
     parent.removeChild(parent.firstChild);
   }
 }
+
+// ~~~~~~~~~ right click menu ~~~~~~~~~
+
+
+function CreateRightClickMenu(element) {
+  let rightClickMenu = new Menu();
+
+  if (element != null && element.match(imgFileTypes)) {
+    rightClickMenu.append(new MenuItem({
+      label: element.substring(element.lastIndexOf('/')+1),
+      enabled: false
+    }));
+
+    rightClickMenu.append(new MenuItem({
+      type: 'separator'
+    }));
+
+    rightClickMenu.append(new MenuItem({
+      label: 'Delete Image',
+      click() {
+        console.log(element);
+      }
+    }));
+  }
+
+  return rightClickMenu;
+}
+
+
+
+window.addEventListener('contextmenu', (e) => {
+  e.preventDefault();
+  let element = e.target.src;
+  CreateRightClickMenu(element).popup(remote.getCurrentWindow())
+}, false);
