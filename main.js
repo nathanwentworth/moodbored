@@ -54,7 +54,6 @@ function createWindow () {
     teenyconf.set('height', height);
     teenyconf.set('posX', x);
     teenyconf.set('posY', y);
-    console.log('saved x: ' + x);
     teenyconf.saveSync();
   })
 
@@ -89,13 +88,26 @@ app.on('activate', function () {
   // dock icon is clicked and there are no other windows open.
   if (mainWindow === null) {
     createWindow();
-    console.log(app.getPath('userData'));
   }
 })
 
 const { Menu } = require('electron')
 
 const template = [
+  {
+    label: 'File',
+    submenu: [
+      {
+        label: 'New Window',
+        accelerator: 'CommandOrControl+N',
+        click() {
+          if (mainWindow === null) {
+            createWindow();
+          }
+        }
+      }
+    ]
+  },
   {
     label: 'Edit',
     submenu: [
@@ -189,6 +201,3 @@ if (process.platform === 'darwin') {
 }
 
 const menu = Menu.buildFromTemplate(template)
-
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and require them here.
