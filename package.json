@@ -1,6 +1,6 @@
 {
   "name": "moodbored",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "description": "a moodboard/image viewer",
   "main": "./main.js",
   "scripts": {
@@ -21,12 +21,13 @@
   "author": "nathan wentworth <me@nathanwentworth.co>",
   "license": "CC0-1.0",
   "devDependencies": {
-    "electron": "^1.7.5",
+    "electron": "^1.7.6",
     "electron-packager": "^8.1.0"
   },
   "dependencies": {
     "image-size": "^0.6.0",
     "request": "^2.81.0",
-    "teeny-conf": "^1.1.0"
+    "teeny-conf": "^1.1.0",
+    "trash": "^4.0.1"
   }
 }

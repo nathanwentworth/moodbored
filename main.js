@@ -40,6 +40,8 @@ function createWindow () {
     slashes: true
   }))
 
+  menu.items[0].submenu.items[0].enabled = false;
+
   // Open the DevTools.
   // mainWindow.webContents.openDevTools()
 
@@ -63,7 +65,8 @@ function createWindow () {
     // Dereference the window object, usually you would store windows
     // in an array if your app supports multi windows, this is the time
     // when you should delete the corresponding element.
-    mainWindow = null
+    mainWindow = null;
+    menu.items[0].submenu.items[0].enabled = true;
   })
 
   Menu.setApplicationMenu(menu);
@@ -100,6 +103,7 @@ const template = [
       {
         label: 'New Window',
         accelerator: 'CommandOrControl+N',
+        enabled: (mainWindow !== null),
         click() {
           if (mainWindow === null) {
             createWindow();
@@ -191,7 +195,7 @@ if (process.platform === 'darwin') {
   )
 
   // Window menu
-  template[3].submenu = [
+  template[4].submenu = [
     {role: 'close'},
     {role: 'minimize'},
     {role: 'zoom'},
@@ -200,4 +204,4 @@ if (process.platform === 'darwin') {
   ]
 }
 
-const menu = Menu.buildFromTemplate(template)
+const menu = Menu.buildFromTemplate(template);

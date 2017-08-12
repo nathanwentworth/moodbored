@@ -471,33 +471,34 @@ function LoadDirectoryContents(path, newRoot) {
     LoadImages(currentPath);
   }
 
-  function LoadImages(currentPath) {
-    imageSrcs = [];
-    fs.readdir(currentPath, (err, dir) => {
-      if (dir.length > 0) {
-        // filter the directory for only image files
-        let filteredDir = dir.filter((f) => {
-          return f.match(imgFileTypes);
-        });
+}
 
-        let _index = 0;
-        for (let file of filteredDir) {
-          _index++;
-          imageSrcs.push(file);
-          if (_index >= filteredDir.length) {
-            // done loading all images
-            // sort array
-            imageSrcs = imageSrcs.sort();
-            // then create elements
-            for (let img of imageSrcs) {
-              CreateImage(currentPath, img);
-            }
-            console.log('!!!!!!!!! done loading all images !!!!!!!!!');
+function LoadImages(currentPath) {
+  imageSrcs = [];
+  fs.readdir(currentPath, (err, dir) => {
+    if (dir.length > 0) {
+      // filter the directory for only image files
+      let filteredDir = dir.filter((f) => {
+        return f.match(imgFileTypes);
+      });
+
+      let _index = 0;
+      for (let file of filteredDir) {
+        _index++;
+        imageSrcs.push(file);
+        if (_index >= filteredDir.length) {
+          // done loading all images
+          // sort array
+          imageSrcs = imageSrcs.sort();
+          // then create elements
+          for (let img of imageSrcs) {
+            CreateImage(currentPath, img);
           }
+          console.log('!!!!!!!!! done loading all images !!!!!!!!!');
         }
       }
-    })
-  }
+    }
+  })
 }
 
 function CreateImage(path, file, dropped) {
@@ -577,13 +578,17 @@ function ClearChildren(parent) {
 
 // ~~~~~~~~~ right click menu ~~~~~~~~~
 
+const trash = require('trash');
 
-function CreateRightClickMenu(element) {
+function CreateRightClickMenu(target) {
+  let src = target.src;
   let rightClickMenu = new Menu();
 
-  if (element != null && element.match(imgFileTypes)) {
+  if (src != null && src.match(imgFileTypes)) {
+    src = src.replace(/%20/g, ' ');
+    src = src.replace(/file:\/\//g, '');
     rightClickMenu.append(new MenuItem({
-      label: element.substring(element.lastIndexOf('/')+1),
+      label: src.substring(src.lastIndexOf('/')+1),
       enabled: false
     }));
 
@@ -594,7 +599,10 @@ function CreateRightClickMenu(element) {
     rightClickMenu.append(new MenuItem({
       label: 'Delete Image',
       click() {
-        console.log(element);
+        console.log(src);
+        trash(src).then(() => {
+          target.remove();
+        });
       }
     }));
   }
@@ -606,6 +614,6 @@ function CreateRightClickMenu(element) {
 
 window.addEventListener('contextmenu', (e) => {
   e.preventDefault();
-  let element = e.target.src;
-  CreateRightClickMenu(element).popup(remote.getCurrentWindow())
+  let target = e.target;
+  CreateRightClickMenu(target).popup(remote.getCurrentWindow())
 }, false);
