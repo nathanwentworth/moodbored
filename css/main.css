@@ -171,7 +171,7 @@ label {
   position: fixed;
   left: 16px;
   bottom: 16px;
-  z-index: 1000;
+  z-index: 900;
 }
 
 .hidden {
