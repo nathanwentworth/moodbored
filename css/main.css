@@ -5,6 +5,11 @@
   font-size: 16px;
 }
 
+:focus {
+  outline: none;
+  box-shadow: 0 0 0 2pt #55f;
+}
+
 body {
   font: caption;
   color: #222;
@@ -105,7 +110,7 @@ section {
   transition: opacity 0.3s;
 }
 
-.how-to {
+.pop-up {
   background: #fff;
   border-radius: 6px;
   position: fixed;
@@ -117,10 +122,11 @@ section {
   box-shadow: 0 0 16px #c1c2c3;
 }
 
-:focus {
-  /*outline: 3px solid #55f;*/
-  outline: none;
-  box-shadow: 0 0 0 2pt #55f;
+kbd {
+  padding: 0.2em;
+  border-radius: 3px;
+  background-color: #f1f2f3;
+  font-family: 'Menlo', monospace;
 }
 
 label {
@@ -188,7 +194,3 @@ label {
 .no-scroll {
   overflow: hidden;
 }
-
-
-
-

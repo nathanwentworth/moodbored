@@ -71,8 +71,6 @@ let dropzone = {
       dataUrl = dataUrl[0];
       if (dataUrl.match(imgFileTypes)) {
         let _dataFileName = dataUrl.substring(dataUrl.lastIndexOf('/')+1);
-        console.log(_dataFileName);
-
         let path = _currentPath + '/' + _dataFileName;
         if (!fs.existsSync(path)) {
           let writeStream = fs.createWriteStream(path);
@@ -146,6 +144,7 @@ let helpButton = document.getElementById('help-ctrl');
 let infoButton = document.getElementById('info-ctrl');
 let howToDialog = document.getElementById('how-to');
 let infoDialog = document.getElementById('info');
+let keyCommandDialog = document.getElementById('key-commands');
 
 
 let _options = {};
@@ -297,15 +296,19 @@ function AddEventsToButtons() {
       if (e.keyCode == 27) {
         ToggleSection(leftSide);
         ToggleImageContainerSize();
+      } else if (e.shiftKey && e.keyCode == 191) {
+        ToggleSection(keyCommandDialog);
       }
     }
   });
 }
 
+// set version info in the info screen
 function SetVersionInfo() {
   document.getElementById('version-disp').innerText = remote.app.getVersion();
 }
 
+// open a system dialog to select a new root folder
 function OpenNewRootFolder() {
   dialog.showOpenDialog({properties: ["openDirectory"]}, (folder) => {
     if (folder === undefined) {
