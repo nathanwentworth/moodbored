@@ -13,6 +13,8 @@ const { dialog } = remote;
 // requires
 const fs = require('fs');
 const request = require('request');
+const trash = require('trash');
+const shell = require('electron').shell;
 
 // directory variables
 let rootDirectory = '';
@@ -383,7 +385,6 @@ function SaveOptions() {
 }
 
 function SetAllLinksExternal() {
-  const shell = require('electron').shell;
   let _links = document.getElementsByTagName('a');
   for (let link of _links) {
     link.addEventListener('click', function () {
@@ -587,8 +588,6 @@ function ClearChildren(parent) {
 
 // ~~~~~~~~~ right click menu ~~~~~~~~~
 
-const trash = require('trash');
-
 function CreateRightClickMenu(target) {
   let src = target.src;
   let rightClickMenu = new Menu();
@@ -622,12 +621,17 @@ function CreateRightClickMenu(target) {
         }
       }
     }));
+
+    rightClickMenu.append(new MenuItem({
+      label: 'Open in Folder',
+      click() {
+        shell.showItemInFolder(src);
+      }
+    }));
   }
 
   return rightClickMenu;
 }
-
-
 
 window.addEventListener('contextmenu', (e) => {
   e.preventDefault();
