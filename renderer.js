@@ -1,16 +1,11 @@
 'use strict';
 
-
-
-// This file is required by the index.html file and will
-// be executed in the renderer process for that window.
-// All of the Node.js APIs are available in this process.
 const moodbored = 'moodbored';
+
+// requires
 const { remote } = require('electron');
 const { Menu, MenuItem } = remote;
 const { dialog } = remote;
-
-// requires
 const fs = require('fs');
 const request = require('request');
 const trash = require('trash');
@@ -210,8 +205,7 @@ window.addEventListener('load', function () {
 function InitialLoad() {
   console.log('~~~~~~~~~ welcome to moodbored ~~~~~~~~~');
   LoadOptions();
-  AddEventsToMainButtons();
-  AddEventsToOptionsButtons();
+  AddEventsToButtons();
   SetAllLinksExternal();
   SetVersionInfo();
 
@@ -236,8 +230,7 @@ function InitialLoad() {
   }
 }
 
-
-function AddEventsToMainButtons() {
+function AddEventsToButtons() {
   openFolderCtrl.addEventListener('click', function() {
     OpenNewRootFolder();
   });
@@ -260,9 +253,7 @@ function AddEventsToMainButtons() {
     ToggleSection(lightbox.elem, true);
     PreventScroll(false);
   })
-}
 
-function AddEventsToOptionsButtons() {
   columnOption.label.innerText = options.columns;
   columnOption.ctrl.value = options.columns;
   columnOption.ctrl.addEventListener('input', function() {
@@ -504,7 +495,7 @@ function LoadImages(currentPath) {
           for (let img of imageSrcs) {
             CreateImage(currentPath, img);
           }
-          console.log('!!!!!!!!! done loading all images !!!!!!!!!');
+          console.log('> done loading all images');
         }
       }
     }
@@ -512,7 +503,6 @@ function LoadImages(currentPath) {
 }
 
 function CreateImage(path, file, dropped) {
-  // console.log('path: ' + path + ', file: ' + file);
   let img = new Image();
   let src = path + '/' + file;
   img.src = src;

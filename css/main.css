@@ -75,7 +75,7 @@ section {
 }
 
 .folders button:hover {
-  color: #f00;
+  color: #f55;
   background-color: transparent;
 }
 
@@ -142,7 +142,7 @@ input[type=button], button {
 
 
 input[type=button]:hover, button:hover {
-  background: #f00;
+  background: #f55;
   color: #fff;
 }
 
