@@ -11,6 +11,8 @@ const request = require('request');
 const trash = require('trash');
 const shell = require('electron').shell;
 
+const options = require('./js/renderer/options.js');
+
 // directory variables
 let rootDirectory = '';
 let currentPath = rootDirectory;
@@ -29,50 +31,27 @@ let folderView = document.getElementById('folders');
 let imageView = document.getElementById('images');
 
 // option/input elements
-let optionsMenu = document.getElementById('options-menu');
 let openFolderCtrl = document.getElementById('open-folder-ctrl');
-
-let columnOption = {
-  ctrl: document.getElementById('image-width-ctrl'),
-  label: document.getElementById('image-width-label')
-}
-
-let gutterOption = {
-  ctrl: document.getElementById('gutter-width-ctrl'),
-  label: document.getElementById('gutter-width-label')
-}
 
 let dropzone = {
   elem: document.getElementById('image-drop'),
   drop: function (e, altPath) {
     let files = e.dataTransfer.files;
-    let data = e.dataTransfer.getData('text/html');
-    data = data.substring(data.indexOf('src="') + 5);
-    let imgSrc = /http[^"\n\r]*(?=")/i;
-    let dataUrl = data.match(imgSrc);
-
-    if (dataUrl == null) {
+    if (files.length > 0) {
       for (let file of files) {
         if (file.type.match(imgFileTypes)) {
           let reader = new FileReader();
           reader.readAsDataURL(file);
-          reader.onload = function (_e) {
-            console.log(file);
+          reader.addEventListener('load', (_e) => {
             let readStream = fs.createReadStream(file.path);
-            readStream.on('open', function () {
-              let _currentPath = currentPath;
-              if (altPath != null && altPath != undefined && altPath != '') {
-                _currentPath = altPath;
-              }
-              console.log('_currentPath: ' + _currentPath);
+            readStream.on('open', () => {
               let path = _currentPath + '/' + file.name;
-              console.log('final path: ' + path);
               if (!fs.existsSync(path)) {
                 let writeStream = fs.createWriteStream(path)
                 readStream.pipe(writeStream);
-                readStream.on('end', function() {
+                readStream.on('end', () => {
                   CreateImage(currentPath, file.name, true);
-                  if (options.moveFile) {
+                  if (_options.moveFile) {
                     fs.unlinkSync(file.path);
                   }
                 });
@@ -80,22 +59,21 @@ let dropzone = {
                 window.alert(path + ' already exists');
               }
             })
-          }
+          }, false);
         }
       }
     } else {
+      let data = e.dataTransfer.getData('text/html');
+      data = data.substring(data.indexOf('src="') + 5);
+      let imgSrc = /http[^"\n\r]*(?=")/i;
+      let dataUrl = data.match(imgSrc);
+      let _currentPath = (altPath != null) ? altPath : currentPath;
       dataUrl = dataUrl[0];
       if (dataUrl.match(imgFileTypes)) {
         let _dataFileName = dataUrl.substring(dataUrl.lastIndexOf('/')+1);
         console.log(_dataFileName);
 
-        let _currentPath = currentPath;
-        if (altPath != null && altPath != undefined && altPath != '') {
-          _currentPath = altPath;
-        }
-        console.log('_currentPath: ' + _currentPath);
         let path = _currentPath + '/' + _dataFileName;
-        console.log('final path: ' + path);
         if (!fs.existsSync(path)) {
           let writeStream = fs.createWriteStream(path);
           let r = request(dataUrl);
@@ -108,44 +86,40 @@ let dropzone = {
         }
       }
     }
-
   }
 }
 
-dropzone.elem.addEventListener('dragover', function (e) {
+dropzone.elem.addEventListener('dragover', (e) => {
   e.stopPropagation();
   e.preventDefault();
   e.dataTransfer.dropEffect = 'copy';
 }, false)
 
-imageView.addEventListener('dragover', function (e) {
+imageView.addEventListener('dragover', (e) => {
   e.stopPropagation();
   e.preventDefault();
   e.dataTransfer.dropEffect = 'copy';
 }, false)
 
-imageView.addEventListener('dragenter', function (e) {
+imageView.addEventListener('dragenter', (e) => {
   e.stopPropagation();
   e.preventDefault();
-  console.log('dragenter');
   if (dropzone.elem.classList.contains('hidden')) {
     dropzone.elem.classList.remove('hidden');
   }
 }, false)
 
-dropzone.elem.addEventListener('dragleave', function (e) {
+dropzone.elem.addEventListener('dragleave', (e) => {
   e.stopPropagation();
   e.preventDefault();
-  console.log('dragleave');
   if (!dropzone.elem.classList.contains('hidden')) {
     dropzone.elem.classList.add('hidden');
   }
 }, false)
 
-imageView.addEventListener('drop', function (e) {
+imageView.addEventListener('drop', (e) => {
   e.stopPropagation();
   e.preventDefault();
-  console.log('dropped on imageview')
   dropzone.drop(e);
   if (!dropzone.elem.classList.contains('hidden')) {
     dropzone.elem.classList.add('hidden');
@@ -153,10 +127,9 @@ imageView.addEventListener('drop', function (e) {
 
 }, false)
 
-dropzone.elem.addEventListener('drop', function (e) {
+dropzone.elem.addEventListener('drop', (e) => {
   e.stopPropagation();
   e.preventDefault();
-  console.log('dropped on dropzone')
   dropzone.drop(e);
   if (!dropzone.elem.classList.contains('hidden')) {
     dropzone.elem.classList.add('hidden');
@@ -164,30 +137,18 @@ dropzone.elem.addEventListener('drop', function (e) {
 
 }, false)
 
-let backgroundOptionCtrl = document.getElementById('background-ctrl');
-let userStylesCtrl = document.getElementById('user-styles-ctrl');;
-let userStylesElem = document.getElementById('user-styles');
 let hideSidePanelCtrl = document.getElementById('hide-side-panel-ctrl');
 let hideOptionsCtrl = document.getElementById('options-ctrl');
+let howToCloseCtrl = document.getElementById('how-to-close-ctrl');
+let infoCloseCtrl = document.getElementById('info-close-ctrl');
+
 let helpButton = document.getElementById('help-ctrl');
 let infoButton = document.getElementById('info-ctrl');
 let howToDialog = document.getElementById('how-to');
 let infoDialog = document.getElementById('info');
-let howToCloseCtrl = document.getElementById('how-to-close-ctrl');
-let infoCloseCtrl = document.getElementById('info-close-ctrl');
-let moveFilesCtrl = document.getElementById('move-files-ctrl');
-let confirmDeleteCtrl = document.getElementById('confirm-delete-ctrl');
 
-// global options
-let options = {
-  columns: 3,
-  gutter: 6,
-  background: '#f1f2f3',
-  userStyles: '',
-  sidebar: true,
-  moveFile: false,
-  confirmDelete: true
-};
+
+let _options = {};
 let lastDirectory = currentPath;
 
 // other elements
@@ -204,13 +165,13 @@ window.addEventListener('load', function () {
 
 function InitialLoad() {
   console.log('~~~~~~~~~ welcome to moodbored ~~~~~~~~~');
-  LoadOptions();
+  _options = options.load();
   AddEventsToButtons();
   SetAllLinksExternal();
   SetVersionInfo();
 
-  ToggleSection(leftSide, !options.sidebar);
-  ToggleImageContainerSize(!options.sidebar);
+  ToggleSection(leftSide, !_options.sidebar);
+  ToggleImageContainerSize(!_options.sidebar);
 
   let loadedPath = localStorage.getItem('lastDirectory');
   rootDirectory = localStorage.getItem('rootDirectory');
@@ -236,7 +197,7 @@ function AddEventsToButtons() {
   });
 
   hideOptionsCtrl.addEventListener('click', function () {
-    ToggleSection(optionsMenu);
+    ToggleSection(options.elements.menu);
   });
 
   hideSidePanelCtrl.addEventListener('click', function () {
@@ -254,56 +215,56 @@ function AddEventsToButtons() {
     PreventScroll(false);
   })
 
-  columnOption.label.innerText = options.columns;
-  columnOption.ctrl.value = options.columns;
-  columnOption.ctrl.addEventListener('input', function() {
-    options.columns = this.value;
-    columnOption.label.innerText = this.value;
+  options.elements.columnOptionLabel.innerText = _options.columns;
+  options.elements.columnOptionCtrl.value = _options.columns;
+  options.elements.columnOptionCtrl.addEventListener('input', function() {
+    _options.columns = this.value;
+    options.elements.columnOptionLabel.innerText = this.value;
     if (imageElements.length > 0) {
       ResizeImages();
     }
-    SaveOptions();
+    options.save(_options);
   });
 
-  gutterOption.label.innerText = options.gutter;
-  gutterOption.ctrl.value = options.gutter;
-  gutterOption.ctrl.addEventListener('input', function() {
-    options.gutter = this.value;
-    gutterOption.label.innerText = this.value;
+  options.elements.gutterOptionLabel.innerText = _options.gutter;
+  options.elements.gutterOptionCtrl.value = _options.gutter;
+  options.elements.gutterOptionCtrl.addEventListener('input', function() {
+    _options.gutter = this.value;
+    options.elements.gutterOptionLabel.innerText = this.value;
     if (imageElements.length > 0) {
       ResizeImages();
     }
-    SaveOptions();
+    options.save(_options);
   });
 
-  backgroundOptionCtrl.value = options.background;
-  mainContainer.style.backgroundColor = options.background;
-  backgroundOptionCtrl.addEventListener('input', function() {
-    options.background = this.value;
-    mainContainer.style.backgroundColor = options.background;
-    SaveOptions();
+  options.elements.backgroundCtrl.value = _options.background;
+  mainContainer.style.backgroundColor = _options.background;
+  options.elements.backgroundCtrl.addEventListener('input', function() {
+    _options.background = this.value;
+    mainContainer.style.backgroundColor = _options.background;
+    options.save(_options);
   });
 
-  userStylesCtrl.value = options.userStyles;
-  userStylesElem.innerText = options.userStyles;
-  userStylesCtrl.addEventListener('input', function() {
-    options.userStyles = this.value;
-    userStylesElem.innerText = options.userStyles;
-    SaveOptions();
+  options.elements.userStylesCtrl.value = _options.userStyles;
+  options.elements.userStylesElem.innerText = _options.userStyles;
+  options.elements.userStylesCtrl.addEventListener('input', function() {
+    _options.userStyles = this.value;
+    options.elements.userStylesElem.innerText = _options.userStyles;
+    options.save(_options);
   });
 
-  moveFilesCtrl.checked = options.moveFile;
-  moveFilesCtrl.addEventListener('click', function() {
-    options.moveFile = this.checked;
-    SaveOptions();
-    console.log(options.moveFile);
+  options.elements.moveFilesCtrl.checked = _options.moveFile;
+  options.elements.moveFilesCtrl.addEventListener('click', function() {
+    _options.moveFile = this.checked;
+    options.save(_options);
+    console.log(_options.moveFile);
   });
 
-  confirmDeleteCtrl.checked = options.confirmDelete;
-  confirmDeleteCtrl.addEventListener('click', function() {
-    options.confirmDelete = this.checked;
-    SaveOptions();
-    console.log(options.confirmDelete);
+  options.elements.confirmDeleteCtrl.checked = _options.confirmDelete;
+  options.elements.confirmDeleteCtrl.addEventListener('click', function() {
+    _options.confirmDelete = this.checked;
+    options.save(_options);
+    console.log(_options.confirmDelete);
   });
 
   helpButton.addEventListener('click', function () {
@@ -360,21 +321,7 @@ function OpenNewRootFolder() {
   })
 }
 
-function LoadOptions() {
-  let _options = localStorage.getItem('options');
-  if (_options != null) {
-    options = JSON.parse(_options);
-    console.log("> successfully loaded options");
-  } else {
-    console.log("no options saved in local storage, going with defaults");
-  }
-}
-
-function SaveOptions() {
-  localStorage.setItem('options', JSON.stringify(options));
-  console.log('> saved options');
-}
-
+// sets a links to open in an external browser
 function SetAllLinksExternal() {
   let _links = document.getElementsByTagName('a');
   for (let link of _links) {
@@ -428,17 +375,17 @@ function CreateFolderView() {
     let spText = document.createTextNode(spTextContent);
     sp.appendChild(spText);
 
-    sp.addEventListener('click', function() {
+    sp.addEventListener('click', () => {
       LoadDirectoryContents(totalPath);
     });
 
-    sp.addEventListener('dragover', function (e) {
+    sp.addEventListener('dragover', (e) => {
       e.stopPropagation();
       e.preventDefault();
       e.dataTransfer.dropEffect = 'copy';
     }, false);
 
-    sp.addEventListener('drop', function (e) {
+    sp.addEventListener('drop', (e) => {
       e.stopPropagation();
       e.preventDefault();
       console.log('dropped on folder')
@@ -448,7 +395,6 @@ function CreateFolderView() {
     folderView.appendChild(sp);
   }
 }
-
 
 function LoadDirectoryContents(path, newRoot) {
   if (newRoot) {
@@ -471,7 +417,6 @@ function LoadDirectoryContents(path, newRoot) {
     title.innerText = moodbored + " - " + path;
     LoadImages(currentPath);
   }
-
 }
 
 function LoadImages(currentPath) {
@@ -561,13 +506,13 @@ function ToggleSection(section, force) {
 }
 
 function ToggleImageContainerSize(force) {
-  options.sidebar = !rightSide.classList.toggle('expand', force);
-  SaveOptions();
+  _options.sidebar = !rightSide.classList.toggle('expand', force);
+  options.save(_options);
 }
 
 function ResizeImage(img) {
-  img.style.width = "calc(100% / " + options.columns + " - " + (options.gutter * 2) + "px)";
-  img.style.margin = options.gutter + "px";
+  img.style.width = "calc(100% / " + _options.columns + " - " + (_options.gutter * 2) + "px)";
+  img.style.margin = _options.gutter + "px";
 }
 
 function ClearChildren(parent) {
@@ -598,7 +543,7 @@ function CreateRightClickMenu(target) {
     rightClickMenu.append(new MenuItem({
       label: 'Delete Image',
       click() {
-        if (options.confirmDelete) {
+        if (_options.confirmDelete) {
           if (window.confirm("Are you sure you want to delete \"" + _name + "\"?")) {
             trash(src).then(() => {
               target.remove();
