@@ -117,6 +117,12 @@ section {
   box-shadow: 0 0 16px #c1c2c3;
 }
 
+:focus {
+  /*outline: 3px solid #55f;*/
+  outline: none;
+  box-shadow: 0 0 0 2pt #55f;
+}
+
 label {
   -webkit-user-select:none;
 }
