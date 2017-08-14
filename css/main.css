@@ -23,6 +23,7 @@ main {
   display: flex;
   flex-direction: row;
   flex-wrap: nowrap;
+  opacity: 0;
 }
 
 section {
@@ -74,6 +75,7 @@ li {
   align-items: center;
   justify-content: center;
   user-select: none;
+  transition: opacity 0.1s;
 }
 
 .right.expand .dropzone {
@@ -202,8 +204,22 @@ label {
 .hidden {
   display: none;
   visibility: hidden;
+  opacity: 0;
 }
 
 .no-scroll {
   overflow: hidden;
+}
+
+.fade-in {
+  animation: 0.5s forwards fade-in;
+}
+
+@keyframes fade-in {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
 }

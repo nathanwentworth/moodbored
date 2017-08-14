@@ -37,6 +37,7 @@ let dropzone = {
   elem: document.getElementById('image-drop'),
   drop: function (e, altPath) {
     let files = e.dataTransfer.files;
+    let _currentPath = (altPath != null) ? altPath : currentPath;
     if (files.length > 0) {
       for (let file of files) {
         if (file.type.match(imgFileTypes)) {
@@ -54,9 +55,20 @@ let dropzone = {
                   if (options.moveFile) {
                     fs.unlinkSync(file.path);
                   }
+                  dropzone.elem.innerText = 'file successfully added!';
+                  setTimeout(() => {
+                    if (!dropzone.elem.classList.contains('hidden')) {
+                      dropzone.elem.classList.add('hidden');
+                    }
+                  }, 1000);
                 });
               } else {
-                window.alert(path + ' already exists');
+                dropzone.elem.innerText = 'file not add, ' + file.name + ' already exists';
+                setTimeout(() => {
+                  if (!dropzone.elem.classList.contains('hidden')) {
+                    dropzone.elem.classList.add('hidden');
+                  }
+                }, 1500);
               }
             })
           }, false);
@@ -67,7 +79,6 @@ let dropzone = {
       data = data.substring(data.indexOf('src="') + 5);
       let imgSrc = /http[^"\n\r]*(?=")/i;
       let dataUrl = data.match(imgSrc);
-      let _currentPath = (altPath != null) ? altPath : currentPath;
       dataUrl = dataUrl[0];
       if (dataUrl.match(imgFileTypes)) {
         let _dataFileName = dataUrl.substring(dataUrl.lastIndexOf('/')+1);
@@ -79,8 +90,19 @@ let dropzone = {
           r.on('end', function() {
             CreateImage(currentPath, _dataFileName, true);
           });
+          dropzone.elem.innerText = 'file successfully added!';
+          setTimeout(() => {
+            if (!dropzone.elem.classList.contains('hidden')) {
+              dropzone.elem.classList.add('hidden');
+            }
+          }, 1000);
         } else {
-          window.alert(path + ' already exists');
+          dropzone.elem.innerText = 'file not uploaded, ' + _dataFileName + ' already exists';
+          setTimeout(() => {
+            if (!dropzone.elem.classList.contains('hidden')) {
+              dropzone.elem.classList.add('hidden');
+            }
+          }, 1500);
         }
       }
     }
@@ -103,6 +125,7 @@ imageView.addEventListener('dragenter', (e) => {
   e.stopPropagation();
   e.preventDefault();
   if (dropzone.elem.classList.contains('hidden')) {
+    dropzone.elem.innerText = "drop here to add image to folder";
     dropzone.elem.classList.remove('hidden');
   }
 }, false)
@@ -119,20 +142,12 @@ imageView.addEventListener('drop', (e) => {
   e.stopPropagation();
   e.preventDefault();
   dropzone.drop(e);
-  if (!dropzone.elem.classList.contains('hidden')) {
-    dropzone.elem.classList.add('hidden');
-  }
-
 }, false)
 
 dropzone.elem.addEventListener('drop', (e) => {
   e.stopPropagation();
   e.preventDefault();
   dropzone.drop(e);
-  if (!dropzone.elem.classList.contains('hidden')) {
-    dropzone.elem.classList.add('hidden');
-  }
-
 }, false)
 
 let hideSidePanelCtrl = document.getElementById('hide-side-panel-ctrl');
@@ -187,6 +202,8 @@ function InitialLoad() {
       LoadDirectoryContents(rootDirectory);
     }
   }
+
+  mainContainer.classList.add('fade-in');
 }
 
 function AddEventsToButtons() {
