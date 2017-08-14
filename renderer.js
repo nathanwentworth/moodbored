@@ -11,7 +11,7 @@ const request = require('request');
 const trash = require('trash');
 const shell = require('electron').shell;
 
-const options = require('./js/renderer/options.js');
+const _options = require('./js/renderer/options.js');
 
 // directory variables
 let rootDirectory = '';
@@ -51,7 +51,7 @@ let dropzone = {
                 readStream.pipe(writeStream);
                 readStream.on('end', () => {
                   CreateImage(currentPath, file.name, true);
-                  if (_options.moveFile) {
+                  if (options.moveFile) {
                     fs.unlinkSync(file.path);
                   }
                 });
@@ -146,8 +146,7 @@ let howToDialog = document.getElementById('how-to');
 let infoDialog = document.getElementById('info');
 let keyCommandDialog = document.getElementById('key-commands');
 
-
-let _options = {};
+let options = {};
 let lastDirectory = currentPath;
 
 // other elements
@@ -164,13 +163,13 @@ window.addEventListener('load', function () {
 
 function InitialLoad() {
   console.log('~~~~~~~~~ welcome to moodbored ~~~~~~~~~');
-  _options = options.load();
+  options = _options.load();
   AddEventsToButtons();
   SetAllLinksExternal();
   SetVersionInfo();
 
-  ToggleSection(leftSide, !_options.sidebar);
-  ToggleImageContainerSize(!_options.sidebar);
+  ToggleSection(leftSide, !options.sidebar);
+  ToggleImageContainerSize(!options.sidebar);
 
   let loadedPath = localStorage.getItem('lastDirectory');
   rootDirectory = localStorage.getItem('rootDirectory');
@@ -196,7 +195,7 @@ function AddEventsToButtons() {
   });
 
   hideOptionsCtrl.addEventListener('click', function () {
-    ToggleSection(options.elements.menu);
+    ToggleSection(_options.elements.menu);
   });
 
   hideSidePanelCtrl.addEventListener('click', function () {
@@ -214,56 +213,56 @@ function AddEventsToButtons() {
     PreventScroll(false);
   })
 
-  options.elements.columnOptionLabel.innerText = _options.columns;
-  options.elements.columnOptionCtrl.value = _options.columns;
-  options.elements.columnOptionCtrl.addEventListener('input', function() {
-    _options.columns = this.value;
-    options.elements.columnOptionLabel.innerText = this.value;
+  _options.elements.columnOptionLabel.innerText = options.columns;
+  _options.elements.columnOptionCtrl.value = options.columns;
+  _options.elements.columnOptionCtrl.addEventListener('input', function() {
+    options.columns = this.value;
+    _options.elements.columnOptionLabel.innerText = this.value;
     if (imageElements.length > 0) {
       ResizeImages();
     }
-    options.save(_options);
+    _options.save(options);
   });
 
-  options.elements.gutterOptionLabel.innerText = _options.gutter;
-  options.elements.gutterOptionCtrl.value = _options.gutter;
-  options.elements.gutterOptionCtrl.addEventListener('input', function() {
-    _options.gutter = this.value;
-    options.elements.gutterOptionLabel.innerText = this.value;
+  _options.elements.gutterOptionLabel.innerText = options.gutter;
+  _options.elements.gutterOptionCtrl.value = options.gutter;
+  _options.elements.gutterOptionCtrl.addEventListener('input', function() {
+    options.gutter = this.value;
+    _options.elements.gutterOptionLabel.innerText = this.value;
     if (imageElements.length > 0) {
       ResizeImages();
     }
-    options.save(_options);
+    _options.save(options);
   });
 
-  options.elements.backgroundCtrl.value = _options.background;
-  mainContainer.style.backgroundColor = _options.background;
-  options.elements.backgroundCtrl.addEventListener('input', function() {
-    _options.background = this.value;
-    mainContainer.style.backgroundColor = _options.background;
-    options.save(_options);
+  _options.elements.backgroundCtrl.value = options.background;
+  mainContainer.style.backgroundColor = options.background;
+  _options.elements.backgroundCtrl.addEventListener('input', function() {
+    options.background = this.value;
+    mainContainer.style.backgroundColor = options.background;
+    _options.save(options);
   });
 
-  options.elements.userStylesCtrl.value = _options.userStyles;
-  options.elements.userStylesElem.innerText = _options.userStyles;
-  options.elements.userStylesCtrl.addEventListener('input', function() {
-    _options.userStyles = this.value;
-    options.elements.userStylesElem.innerText = _options.userStyles;
-    options.save(_options);
+  _options.elements.userStylesCtrl.value = options.userStyles;
+  _options.elements.userStylesElem.innerText = options.userStyles;
+  _options.elements.userStylesCtrl.addEventListener('input', function() {
+    options.userStyles = this.value;
+    _options.elements.userStylesElem.innerText = options.userStyles;
+    _options.save(options);
   });
 
-  options.elements.moveFilesCtrl.checked = _options.moveFile;
-  options.elements.moveFilesCtrl.addEventListener('click', function() {
-    _options.moveFile = this.checked;
-    options.save(_options);
-    console.log(_options.moveFile);
+  _options.elements.moveFilesCtrl.checked = options.moveFile;
+  _options.elements.moveFilesCtrl.addEventListener('click', function() {
+    options.moveFile = this.checked;
+    _options.save(options);
+    console.log(options.moveFile);
   });
 
-  options.elements.confirmDeleteCtrl.checked = _options.confirmDelete;
-  options.elements.confirmDeleteCtrl.addEventListener('click', function() {
-    _options.confirmDelete = this.checked;
-    options.save(_options);
-    console.log(_options.confirmDelete);
+  _options.elements.confirmDeleteCtrl.checked = options.confirmDelete;
+  _options.elements.confirmDeleteCtrl.addEventListener('click', function() {
+    options.confirmDelete = this.checked;
+    _options.save(options);
+    console.log(options.confirmDelete);
   });
 
   helpButton.addEventListener('click', function () {
@@ -284,18 +283,23 @@ function AddEventsToButtons() {
 
   window.addEventListener('keydown', function (e) {
     if (!lightbox.elem.classList.contains('hidden')) {
+      // esc, close lightbox
       if (e.keyCode == 27) {
         ToggleSection(lightbox.elem);
         PreventScroll(false);
+        // left/a, go left in lightbox
       } else if (e.keyCode == 37 || e.keyCode == 65) {
         lightbox.increment(-1);
+        // right/d, go right in lightbox
       } else if (e.keyCode == 39 || e.keyCode == 68) {
         lightbox.increment(1);
       }
     } else {
+      // esc, toggle sidebar
       if (e.keyCode == 27) {
         ToggleSection(leftSide);
         ToggleImageContainerSize();
+        // ?, toggle key command dialog
       } else if (e.shiftKey && e.keyCode == 191) {
         ToggleSection(keyCommandDialog);
       }
@@ -326,12 +330,12 @@ function OpenNewRootFolder() {
 
 // sets a links to open in an external browser
 function SetAllLinksExternal() {
-  let _links = document.getElementsByTagName('a');
-  for (let link of _links) {
+  let links = document.getElementsByTagName('a');
+  for (let link of links) {
     link.addEventListener('click', function () {
       event.preventDefault();
       shell.openExternal(this.href);
-    })
+    });
   }
 }
 
@@ -339,7 +343,7 @@ function SetAllLinksExternal() {
 // pushes all tail/endpoint directories into `leaves`
 function GetNewDirectoryStructure(path) {
   let dir = fs.readdirSync(path);
-  if (dir != undefined && dir.length > 0) {
+  if (dir !== undefined && dir.length > 0) {
     for (let i = 0; i < dir.length; i++) {
       let file = dir[i];
       let notLeaf = false;
@@ -366,9 +370,9 @@ function CreateFolderView() {
   ClearChildren(folderView);
   if (leaves.length > 1) {
     leaves.sort();
-    for (let leaf of leaves) {
-      CreateFolderElement(leaf);
-    }
+    leaves.forEach((element) => {
+      CreateFolderElement(element);
+    });
   }
 
   function CreateFolderElement(totalPath) {
@@ -495,9 +499,9 @@ let lightbox = {
 // ~~~~~~~~~ utility functions ~~~~~~~~~
 
 function ResizeImages() {
-  for (let img of imageElements) {
-    ResizeImage(img);
-  }
+  imageElements.forEach((element) => {
+    ResizeImage(element);
+  })
 }
 
 function PreventScroll(force) {
@@ -509,13 +513,13 @@ function ToggleSection(section, force) {
 }
 
 function ToggleImageContainerSize(force) {
-  _options.sidebar = !rightSide.classList.toggle('expand', force);
-  options.save(_options);
+  options.sidebar = !rightSide.classList.toggle('expand', force);
+  _options.save(options);
 }
 
 function ResizeImage(img) {
-  img.style.width = "calc(100% / " + _options.columns + " - " + (_options.gutter * 2) + "px)";
-  img.style.margin = _options.gutter + "px";
+  img.style.width = "calc(100% / " + options.columns + " - " + (options.gutter * 2) + "px)";
+  img.style.margin = options.gutter + "px";
 }
 
 function ClearChildren(parent) {
@@ -546,7 +550,7 @@ function CreateRightClickMenu(target) {
     rightClickMenu.append(new MenuItem({
       label: 'Delete Image',
       click() {
-        if (_options.confirmDelete) {
+        if (options.confirmDelete) {
           if (window.confirm("Are you sure you want to delete \"" + _name + "\"?")) {
             trash(src).then(() => {
               target.remove();

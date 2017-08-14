@@ -1,7 +1,8 @@
 
 * {
   box-sizing: border-box;;
-  font: caption;
+  /*font: caption;*/
+  font-family: system-ui;
   font-size: 16px;
 }
 
@@ -27,6 +28,18 @@ main {
 section {
   display: inline-block;
   padding: 1rem;
+}
+
+p, ul {
+  line-height: 1.4;
+}
+
+ul {
+  list-style: none;
+}
+
+li {
+  margin: 12px;
 }
 
 .left {
