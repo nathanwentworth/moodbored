@@ -26,3 +26,45 @@
   display: none;
   visibility: hidden;
 }
+
+.lightbox .arrow {
+  height: 100%;
+  position: absolute;
+  font-size: 2rem;
+  display: flex;
+  align-items: center;
+  align-content: center;
+  justify-content: center;
+  padding: 1rem;
+  opacity: 0;
+  transition: opacity 0.1s;
+  cursor: default;
+  animation: 1s fade-out;
+  background-color: rgba(250, 250, 250, 0.5);
+  user-select: none;
+}
+
+.lightbox .arrow:hover {
+  opacity: 1;
+}
+
+.lightbox .arrow-left {
+  left: 0;
+}
+
+.lightbox .arrow-right {
+  right: 0;
+}
+
+@keyframes fade-out {
+  0% {
+    opacity: 1;
+  }
+  75% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+

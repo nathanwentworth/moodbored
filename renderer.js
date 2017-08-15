@@ -221,14 +221,19 @@ function AddEventsToButtons() {
   });
 
   lightbox.elem.addEventListener('click', function () {
-    ToggleSection(lightbox.elem, true);
-    PreventScroll(false);
+    lightbox.display(false);
+  }, false)
+
+  lightbox.arrowL.addEventListener('click', function (e) {
+    lightbox.increment(-1);
+    e.stopPropagation();
   })
 
-  lightbox.img.addEventListener('click', function () {
-    ToggleSection(lightbox.elem, true);
-    PreventScroll(false);
+  lightbox.arrowR.addEventListener('click', function (e) {
+    lightbox.increment(1);
+    e.stopPropagation();
   })
+
 
   _options.elements.columnOptionLabel.innerText = options.columns;
   _options.elements.columnOptionCtrl.value = options.columns;
@@ -302,8 +307,7 @@ function AddEventsToButtons() {
     if (!lightbox.elem.classList.contains('hidden')) {
       // esc, close lightbox
       if (e.keyCode == 27) {
-        ToggleSection(lightbox.elem);
-        PreventScroll(false);
+        lightbox.display(false);
         // left/a, go left in lightbox
       } else if (e.keyCode == 37 || e.keyCode == 65) {
         lightbox.increment(-1);
@@ -497,10 +501,12 @@ function CreateImage(path, file, dropped) {
 let lightbox = {
   elem: document.getElementById('lightbox'),
   img: document.getElementById('lightboxImg'),
+  arrowL: document.getElementById('arrow-left'),
+  arrowR: document.getElementById('arrow-right'),
   index: 0,
   setImg: function (_img) {
     this.img.src = _img.src;
-    ToggleSection(this.elem);
+    lightbox.display(true);
   },
   increment: function (amount) {
     this.index += amount;
@@ -510,6 +516,10 @@ let lightbox = {
       this.index = 0;
     }
     this.img.src = imageElements[this.index].src;
+  },
+  display: function (disp) {
+    ToggleSection(lightbox.elem, !disp);
+    PreventScroll(disp);
   }
 }
 
