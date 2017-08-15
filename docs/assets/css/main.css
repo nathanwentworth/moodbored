@@ -89,6 +89,10 @@ h1, h2, h3, h4, h5, h6 {
   max-width: 37rem;
   line-height: 1; }
 
+li {
+  line-height: 1.4;
+  margin: 0.65rem auto; }
+
 /* # site styles */
 body {
   /*background-color: #f1f2f3;*/ }

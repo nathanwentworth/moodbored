@@ -33,122 +33,133 @@ let imageView = document.getElementById('images');
 // option/input elements
 let openFolderCtrl = document.getElementById('open-folder-ctrl');
 
-let dropzone = {
-  elem: document.getElementById('image-drop'),
-  drop: function (e, altPath) {
+// ~~~~~~~~~ drag and drop ~~~~~~~~~
+
+var dropzone = function () {
+  var elem = document.getElementById('image-drop');
+
+  function init() {
+    elem.addEventListener('dragover', copy, false)
+    imageView.addEventListener('dragover', copy, false)
+
+    function copy (e) {
+      e.dataTransfer.dropEffect = (options.moveFile) ? 'move' : 'copy';
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    imageView.addEventListener('dragenter', (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      if (elem.classList.contains('hidden')) {
+        elem.innerText = "drop here to add image to folder";
+        elem.classList.remove('hidden');
+      }
+    }, false)
+
+    elem.addEventListener('dragleave', (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      if (!elem.classList.contains('hidden')) {
+        elem.classList.add('hidden');
+      }
+    }, false)
+
+    imageView.addEventListener('drop', dropEv, false)
+    elem.addEventListener('drop', dropEv, false)
+
+    function dropEv(e) {
+      e.stopPropagation();
+      e.preventDefault();
+      drop(e);
+    }
+  }
+  init();
+
+  function drop (e, altPath) {
     let files = e.dataTransfer.files;
-    let _currentPath = (altPath != null) ? altPath : currentPath;
-    if (files.length > 0) {
+    // if f is true, it's a file, false it's data
+    let f = (files.length > 0);
+    if (f) {
       for (let file of files) {
-        if (file.type.match(imgFileTypes)) {
-          let reader = new FileReader();
-          reader.readAsDataURL(file);
-          reader.addEventListener('load', (_e) => {
-            let readStream = fs.createReadStream(file.path);
-            readStream.on('open', () => {
-              let path = _currentPath + '/' + file.name;
-              if (!fs.existsSync(path)) {
-                let writeStream = fs.createWriteStream(path)
-                readStream.pipe(writeStream);
-                readStream.on('end', () => {
-                  CreateImage(currentPath, file.name, true);
-                  if (options.moveFile) {
-                    fs.unlinkSync(file.path);
-                  }
-                  dropzone.elem.innerText = 'file successfully added!';
-                  setTimeout(() => {
-                    if (!dropzone.elem.classList.contains('hidden')) {
-                      dropzone.elem.classList.add('hidden');
-                    }
-                  }, 1000);
-                });
-              } else {
-                dropzone.elem.innerText = 'file not add, ' + file.name + ' already exists';
-                setTimeout(() => {
-                  if (!dropzone.elem.classList.contains('hidden')) {
-                    dropzone.elem.classList.add('hidden');
-                  }
-                }, 1500);
-              }
-            })
-          }, false);
-        }
+        upload(file, altPath, true);
       }
     } else {
       let data = e.dataTransfer.getData('text/html');
-      data = data.substring(data.indexOf('src="') + 5);
-      let imgSrc = /http[^"\n\r]*(?=")/i;
-      let dataUrl = data.match(imgSrc);
-      dataUrl = dataUrl[0];
-      if (dataUrl.match(imgFileTypes)) {
-        let _dataFileName = dataUrl.substring(dataUrl.lastIndexOf('/')+1);
-        let path = _currentPath + '/' + _dataFileName;
-        if (!fs.existsSync(path)) {
-          let writeStream = fs.createWriteStream(path);
-          let r = request(dataUrl);
-          r.pipe(writeStream);
-          r.on('end', function() {
-            CreateImage(currentPath, _dataFileName, true);
-          });
-          dropzone.elem.innerText = 'file successfully added!';
-          setTimeout(() => {
-            if (!dropzone.elem.classList.contains('hidden')) {
-              dropzone.elem.classList.add('hidden');
-            }
-          }, 1000);
-        } else {
-          dropzone.elem.innerText = 'file not uploaded, ' + _dataFileName + ' already exists';
-          setTimeout(() => {
-            if (!dropzone.elem.classList.contains('hidden')) {
-              dropzone.elem.classList.add('hidden');
-            }
-          }, 1500);
-        }
-      }
+      upload(data, altPath, false);
     }
   }
-}
 
-dropzone.elem.addEventListener('dragover', (e) => {
-  e.stopPropagation();
-  e.preventDefault();
-  e.dataTransfer.dropEffect = 'copy';
-}, false)
+  function upload(data, altPath, f) {
+    // set local data var
+    let _data = data;
 
-imageView.addEventListener('dragover', (e) => {
-  e.stopPropagation();
-  e.preventDefault();
-  e.dataTransfer.dropEffect = 'copy';
-}, false)
+    let _currentPath = altPath || currentPath;
+    let path = _currentPath + '/';
+    let name = '';
 
-imageView.addEventListener('dragenter', (e) => {
-  e.stopPropagation();
-  e.preventDefault();
-  if (dropzone.elem.classList.contains('hidden')) {
-    dropzone.elem.innerText = "drop here to add image to folder";
-    dropzone.elem.classList.remove('hidden');
+    if (!f) {
+      let imgSrc = /http[^"\n\r]*(?=")/i;
+      _data = _data.substring(_data.indexOf('src="') + 5).match(imgSrc)[0];
+    }
+
+    var isImage = (f) ? _data.type.match(imgFileTypes) : _data.match(imgFileTypes);
+
+    if (isImage) {
+      name = (f) ? _data.name : _data.substring(_data.lastIndexOf('/') + 1);
+      path += name;
+
+      if (!fs.existsSync(path)) {
+        let r = (f) ? fs.createReadStream(_data.path) : request(_data);
+        let writeStream = fs.createWriteStream(path);
+        if (f) {
+          r.on('open', () => {
+            writeImage();
+          })
+        } else {
+          writeImage();
+        }
+
+        function writeImage() {
+          r.pipe(writeStream);
+          r.on('end', function() {
+            CreateImage(currentPath, name, true);
+          });
+        }
+
+        if (f && options.moveFile) {
+          fs.unlinkSync(_data.path);
+        }
+
+        notification(true, name);
+
+      } else {
+        notification(false, name, 'file already exists');
+      }
+    } else {
+      notification(false, name, 'not an image');
+    }
   }
-}, false)
 
-dropzone.elem.addEventListener('dragleave', (e) => {
-  e.stopPropagation();
-  e.preventDefault();
-  if (!dropzone.elem.classList.contains('hidden')) {
-    dropzone.elem.classList.add('hidden');
+  function notification (success, name, reason, time) {
+    let _time = time || 1250;
+    let _reason = reason || '';
+    let text = '';
+    let result = (success) ? ' successfully added!' : ' not added, ';
+    text = name + result + _reason;
+    dropzone.elem.innerText = text;
+    setTimeout(() => {
+      if (!dropzone.elem.classList.contains('hidden')) {
+        dropzone.elem.classList.add('hidden');
+      }
+    }, _time);
   }
-}, false)
 
-imageView.addEventListener('drop', (e) => {
-  e.stopPropagation();
-  e.preventDefault();
-  dropzone.drop(e);
-}, false)
-
-dropzone.elem.addEventListener('drop', (e) => {
-  e.stopPropagation();
-  e.preventDefault();
-  dropzone.drop(e);
-}, false)
+  return {
+    elem: elem,
+    drop: drop
+  }
+}();
 
 let hideSidePanelCtrl = document.getElementById('hide-side-panel-ctrl');
 let hideOptionsCtrl = document.getElementById('options-ctrl');
@@ -220,22 +231,6 @@ function AddEventsToButtons() {
     ToggleImageContainerSize();
   });
 
-  lightbox.arrowL.addEventListener('click', function (e) {
-    lightbox.increment(-1);
-    e.stopPropagation();
-  })
-
-  lightbox.arrowR.addEventListener('click', function (e) {
-    lightbox.increment(1);
-    e.stopPropagation();
-  })
-
-  lightbox.elem.addEventListener('click', function () {
-    lightbox.display(false);
-  }, false)
-
-
-
   _options.elements.columnOptionLabel.innerText = options.columns;
   _options.elements.columnOptionCtrl.value = options.columns;
   _options.elements.columnOptionCtrl.addEventListener('input', function() {
@@ -305,7 +300,7 @@ function AddEventsToButtons() {
   });
 
   window.addEventListener('keydown', function (e) {
-    if (!lightbox.elem.classList.contains('hidden')) {
+    if (!lightbox.hidden) {
       // esc, close lightbox
       if (e.keyCode == 27) {
         lightbox.display(false);
@@ -489,40 +484,72 @@ function CreateImage(path, file, dropped) {
     img.classList.add('img-loaded');
   }
   let _index = imageElements.length + 1
-  img.addEventListener('click', function () {
+  img.addEventListener('click', imageEvents, false);
+  imageElements.push(img);
+
+  function imageEvents() {
     lightbox.setImg(img);
     lightbox.index = _index;
     PreventScroll(true);
-  })
-  imageElements.push(img);
+  }
 }
 
 // ~~~~~~~~~ lightbox ~~~~~~~~~
 
-let lightbox = {
-  elem: document.getElementById('lightbox'),
-  img: document.getElementById('lightboxImg'),
-  arrowL: document.getElementById('arrow-left'),
-  arrowR: document.getElementById('arrow-right'),
-  index: 0,
-  setImg: function (_img) {
-    this.img.src = _img.src;
+var lightbox = function () {
+  var elem = document.getElementById('lightbox');
+  var img = document.getElementById('lightboxImg');
+  var arrowL = document.getElementById('arrow-left');
+  var arrowR = document.getElementById('arrow-right');
+  var index = 0;
+  var hidden = !elem.classList.contains('hidden');
+
+  function init() {
+    arrowL.addEventListener('click', function (e) {
+      increment(-1);
+      e.stopPropagation();
+    })
+
+    arrowR.addEventListener('click', function (e) {
+      increment(1);
+      e.stopPropagation();
+    })
+
+    elem.addEventListener('click', function () {
+      display(false);
+    }, false)
+  }
+  init();
+
+  function setImg(_img) {
+    img.src = _img.src;
     lightbox.display(true);
-  },
-  increment: function (amount) {
-    this.index += amount;
-    if (this.index < 0) {
-      this.index = imageElements.length - 1;
-    } else if (this.index >= imageElements.length) {
-      this.index = 0;
+  }
+
+  function increment(amount) {
+    index += amount;
+    if (index < 0) {
+      index = imageElements.length - 1;
+    } else if (index >= imageElements.length) {
+      index = 0;
     }
-    this.img.src = imageElements[this.index].src;
-  },
-  display: function (disp) {
-    ToggleSection(lightbox.elem, !disp);
+    img.src = imageElements[index].src;
+  }
+
+  function display(disp) {
+    hidden = !disp;
+    ToggleSection(elem, !disp);
     PreventScroll(disp);
   }
-}
+
+  return {
+    setImg: setImg,
+    increment: increment,
+    display: display,
+    index: index,
+    hidden: hidden
+  }
+}();
 
 // ~~~~~~~~~ utility functions ~~~~~~~~~
 
