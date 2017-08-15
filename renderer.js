@@ -220,10 +220,6 @@ function AddEventsToButtons() {
     ToggleImageContainerSize();
   });
 
-  lightbox.elem.addEventListener('click', function () {
-    lightbox.display(false);
-  }, false)
-
   lightbox.arrowL.addEventListener('click', function (e) {
     lightbox.increment(-1);
     e.stopPropagation();
@@ -233,6 +229,11 @@ function AddEventsToButtons() {
     lightbox.increment(1);
     e.stopPropagation();
   })
+
+  lightbox.elem.addEventListener('click', function () {
+    lightbox.display(false);
+  }, false)
+
 
 
   _options.elements.columnOptionLabel.innerText = options.columns;
