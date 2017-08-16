@@ -252,6 +252,7 @@ function OptionsController(e) {
 
   } else if (target.tagName == 'TEXTAREA') {
     if (opt == 'userStyles') {
+      options[opt] = target.value;
       _options.elements.userStyles.elem.innerText = options.userStyles;
     }
   }
