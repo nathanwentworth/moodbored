@@ -42,12 +42,6 @@ var dropzone = function () {
     elem.addEventListener('dragover', copy, false)
     imageView.addEventListener('dragover', copy, false)
 
-    function copy (e) {
-      e.dataTransfer.dropEffect = (options.moveFile) ? 'move' : 'copy';
-      e.preventDefault();
-      e.stopPropagation();
-    }
-
     imageView.addEventListener('dragenter', (e) => {
       e.stopPropagation();
       e.preventDefault();
@@ -75,6 +69,12 @@ var dropzone = function () {
     }
   }
   init();
+
+  function copy (e) {
+    e.dataTransfer.dropEffect = (options.moveFile) ? 'move' : 'copy';
+    e.preventDefault();
+    e.stopPropagation();
+  }
 
   function drop (e, altPath) {
     let files = e.dataTransfer.files;
@@ -157,6 +157,7 @@ var dropzone = function () {
 
   return {
     elem: elem,
+    copy: copy,
     drop: drop
   }
 }();
@@ -183,14 +184,13 @@ let title = document.getElementsByTagName('title')[0];
 let leaves = [];
 
 // on load, run the init and the loadfiles functions
-window.addEventListener('load', function () {
-  InitialLoad();
-});
+window.addEventListener('load', InitialLoad, false);
 
 function InitialLoad() {
   console.log('~~~~~~~~~ welcome to moodbored ~~~~~~~~~');
   options = _options.load();
   AddEventsToButtons();
+  OptionsInit();
   SetAllLinksExternal();
   SetVersionInfo();
 
@@ -217,13 +217,53 @@ function InitialLoad() {
   mainContainer.classList.add('fade-in');
 }
 
-function AddEventsToButtons() {
-  openFolderCtrl.addEventListener('click', function() {
-    OpenNewRootFolder();
+function OptionsInit() {
+  Object.keys(_options.elements).forEach((key) => {
+    var optionElement = _options.elements[key];
+    optionElement.ctrl.value = _options[key];
+    optionElement.ctrl.checked = _options[key];
+    if (optionElement.label) {
+      optionElement.label.innerText = _options[key];
+    }
   });
 
+  mainContainer.style.backgroundColor = options.background;
+  _options.elements.userStyles.elem.innerText = options.userStyles;
+}
+
+function OptionsController(e) {
+  var target = e.target;
+  var opt = target.dataset.option;
+  if (target.tagName == 'INPUT') {
+    if (target.type == 'checkbox') {
+      options[opt] = target.checked;
+    } else if (target.type == 'text') {
+      options[opt] = target.value;
+      if (opt == 'background') {
+        mainContainer.style.backgroundColor = options.background;
+      }
+    } else if (target.type == 'range') {
+      options[opt] = target.value;
+      _options.elements[opt].label.innerText = target.value;
+      if (imageElements.length > 0) {
+        ResizeImages();
+      }
+    }
+
+  } else if (target.tagName == 'TEXTAREA') {
+    if (opt == 'userStyles') {
+      _options.elements.userStyles.elem.innerText = options.userStyles;
+    }
+  }
+
+  _options.save(options);
+}
+
+function AddEventsToButtons() {
+  openFolderCtrl.addEventListener('click', OpenNewRootFolder, true);
+
   hideOptionsCtrl.addEventListener('click', function () {
-    ToggleSection(_options.elements.menu);
+    ToggleSection(_options.menu);
   });
 
   hideSidePanelCtrl.addEventListener('click', function () {
@@ -231,57 +271,10 @@ function AddEventsToButtons() {
     ToggleImageContainerSize();
   });
 
-  _options.elements.columnOptionLabel.innerText = options.columns;
-  _options.elements.columnOptionCtrl.value = options.columns;
-  _options.elements.columnOptionCtrl.addEventListener('input', function() {
-    options.columns = this.value;
-    _options.elements.columnOptionLabel.innerText = this.value;
-    if (imageElements.length > 0) {
-      ResizeImages();
-    }
-    _options.save(options);
-  });
+  let optionsMenu = document.getElementById('options-menu');
 
-  _options.elements.gutterOptionLabel.innerText = options.gutter;
-  _options.elements.gutterOptionCtrl.value = options.gutter;
-  _options.elements.gutterOptionCtrl.addEventListener('input', function() {
-    options.gutter = this.value;
-    _options.elements.gutterOptionLabel.innerText = this.value;
-    if (imageElements.length > 0) {
-      ResizeImages();
-    }
-    _options.save(options);
-  });
-
-  _options.elements.backgroundCtrl.value = options.background;
-  mainContainer.style.backgroundColor = options.background;
-  _options.elements.backgroundCtrl.addEventListener('input', function() {
-    options.background = this.value;
-    mainContainer.style.backgroundColor = options.background;
-    _options.save(options);
-  });
-
-  _options.elements.userStylesCtrl.value = options.userStyles;
-  _options.elements.userStylesElem.innerText = options.userStyles;
-  _options.elements.userStylesCtrl.addEventListener('input', function() {
-    options.userStyles = this.value;
-    _options.elements.userStylesElem.innerText = options.userStyles;
-    _options.save(options);
-  });
-
-  _options.elements.moveFilesCtrl.checked = options.moveFile;
-  _options.elements.moveFilesCtrl.addEventListener('click', function() {
-    options.moveFile = this.checked;
-    _options.save(options);
-    console.log(options.moveFile);
-  });
-
-  _options.elements.confirmDeleteCtrl.checked = options.confirmDelete;
-  _options.elements.confirmDeleteCtrl.addEventListener('click', function() {
-    options.confirmDelete = this.checked;
-    _options.save(options);
-    console.log(options.confirmDelete);
-  });
+  optionsMenu.addEventListener('input', OptionsController, false);
+  optionsMenu.addEventListener('click', OptionsController, false);
 
   helpButton.addEventListener('click', function () {
     ToggleSection(howToDialog);
@@ -349,10 +342,12 @@ function OpenNewRootFolder() {
 function SetAllLinksExternal() {
   let links = document.getElementsByTagName('a');
   for (let link of links) {
-    link.addEventListener('click', function () {
-      event.preventDefault();
-      shell.openExternal(this.href);
-    });
+    link.addEventListener('click', openLink, false);
+  }
+
+  function openLink(e) {
+    e.preventDefault();
+    shell.openExternal(this.href);
   }
 }
 
@@ -403,16 +398,11 @@ function CreateFolderView() {
       LoadDirectoryContents(totalPath);
     });
 
-    sp.addEventListener('dragover', (e) => {
-      e.stopPropagation();
-      e.preventDefault();
-      e.dataTransfer.dropEffect = 'copy';
-    }, false);
+    sp.addEventListener('dragover', dropzone.copy, false);
 
     sp.addEventListener('drop', (e) => {
       e.stopPropagation();
       e.preventDefault();
-      console.log('dropped on folder')
       dropzone.drop(e, totalPath);
     }, false)
 

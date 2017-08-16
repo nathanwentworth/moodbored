@@ -12,17 +12,30 @@ const defaults = {
 // defaults
 module.exports = defaults;
 
+module.exports.menu = document.getElementById('options-menu');
+
 module.exports.elements = {
-  menu: document.getElementById('options-menu'),
-  columnOptionCtrl: document.getElementById('image-width-ctrl'),
-  columnOptionLabel: document.getElementById('image-width-label'),
-  gutterOptionCtrl: document.getElementById('gutter-width-ctrl'),
-  gutterOptionLabel: document.getElementById('gutter-width-label'),
-  backgroundCtrl: document.getElementById('background-ctrl'),
-  userStylesCtrl: document.getElementById('user-styles-ctrl'),
-  userStylesElem: document.getElementById('user-styles'),
-  moveFilesCtrl: document.getElementById('move-files-ctrl'),
-  confirmDeleteCtrl: document.getElementById('confirm-delete-ctrl')
+  columns: {
+    ctrl: document.getElementById('image-width-ctrl'),
+    label: document.getElementById('image-width-label')
+  },
+  gutter: {
+    ctrl: document.getElementById('gutter-width-ctrl'),
+    label: document.getElementById('gutter-width-label')
+  },
+  background: {
+    ctrl: document.getElementById('background-ctrl')
+  },
+  userStyles: {
+    ctrl: document.getElementById('user-styles-ctrl'),
+    elem: document.getElementById('user-styles')
+  },
+  moveFiles: {
+    ctrl: document.getElementById('move-files-ctrl')
+  },
+  confirmDelete: {
+    ctrl: document.getElementById('confirm-delete-ctrl')
+  }
 }
 
 module.exports.load = function () {
