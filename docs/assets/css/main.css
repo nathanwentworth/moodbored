@@ -125,6 +125,8 @@ body {
   margin: auto;
   background: #f1f2f3;
   border-bottom-right-radius: 6px; }
+  .site-title img {
+    max-width: 128px; }
 
 .cta {
   background-color: #55f;

@@ -105,6 +105,10 @@ body {
 	margin: auto;
 	background: $background-color;
 	border-bottom-right-radius: 6px;
+
+	img {
+		max-width: 128px;
+	}
 }
 
 .cta {

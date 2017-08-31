@@ -111,7 +111,6 @@ var dropzone = function () {
 
       if (!fs.existsSync(path)) {
         let r = (f) ? fs.createReadStream(_data.path) : request(_data);
-        let writeStream = fs.createWriteStream(path);
         if (f) {
           r.on('open', () => {
             writeImage();
@@ -121,8 +120,9 @@ var dropzone = function () {
         }
 
         function writeImage() {
-          r.pipe(writeStream);
+          r.pipe(fs.createWriteStream(path));
           r.on('end', function() {
+            console.log('image done loading, creating image');
             CreateImage(currentPath, name, true);
           });
         }
