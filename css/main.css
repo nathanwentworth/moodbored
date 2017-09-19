@@ -24,6 +24,8 @@ main {
   flex-wrap: nowrap;
   opacity: 0;
 }
+main.sidebar-left { flex-direction: row; }
+main.sidebar-right { flex-direction: row-reverse; }
 
 section {
   display: inline-block;
@@ -56,12 +58,6 @@ li {
   /*width: 100%;*/
   overflow: scroll;
   padding-bottom: 3rem;
-}
-.sidebar.left {
-  left: 0;
-}
-.sidebar.right {
-  right: 0;
 }
 .view {
   position: relative;
@@ -208,9 +204,14 @@ label {
 
 #hide-side-panel-ctrl {
   position: fixed;
-  left: 16px;
   bottom: 16px;
   z-index: 900;
+}
+main.sidebar-left #hide-side-panel-ctrl {
+  left: 16px;
+}
+main.sidebar-right #hide-side-panel-ctrl {
+  right: 16px;
 }
 
 .hidden {

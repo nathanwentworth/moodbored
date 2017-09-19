@@ -9,8 +9,8 @@
     <style type="text/css" id="user-styles"></style>
   </head>
   <body>
-    <main id="main">
-    <section class="sidebar-container visible right" id="sidebar">
+    <main id="main" class="sidebar-right">
+    <section class="sidebar-container visible left" id="sidebar">
       <div class="sidebar">
         <div class="folders" id="folders"></div>
         <button id='open-folder-ctrl'>open folder</button>
@@ -45,6 +45,14 @@
           <div>
             <label data-option="confirmDelete">confirm on delete:</label>
             <input data-option="confirmDelete" type="checkbox" id="confirm-delete-ctrl">
+          </div>
+
+          <div>
+            <label data-option="sidebarSide">sidebar side:</label>
+            <select data-option="sidebarSide" type="select" id="sidebar-side-ctrl">
+              <option value="left">left</option>
+              <option value="right">right</option>
+            </select>
           </div>
 
           <button data-btn="help" id="help-ctrl">help!</button>

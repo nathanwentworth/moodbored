@@ -219,7 +219,8 @@ function InitialLoad() {
 function OptionsInit() {
   Object.keys(_options.elements).forEach((key) => {
     var optionElement = _options.elements[key];
-    optionElement.ctrl.value = _options[key];
+    optionElement.ctrl.value = options[key];
+    console.log(key + ': ' + optionElement.ctrl.value);
     optionElement.ctrl.checked = _options[key];
     if (optionElement.label) {
       optionElement.label.innerText = _options[key];
@@ -228,6 +229,7 @@ function OptionsInit() {
 
   mainContainer.style.backgroundColor = options.background;
   _options.elements.userStyles.elem.innerText = options.userStyles;
+  SetSidebarSide(options.sidebarSide);
 }
 
 function OptionsController(e) {
@@ -253,6 +255,11 @@ function OptionsController(e) {
     if (opt == 'userStyles') {
       options[opt] = target.value;
       _options.elements.userStyles.elem.innerText = options.userStyles;
+    }
+  } else if (target.tagName == 'SELECT') {
+    if (opt == 'sidebarSide') {
+      options[opt] = target.value;
+      SetSidebarSide(target.value);
     }
   }
 
@@ -542,6 +549,21 @@ var lightbox = function () {
     hidden: hidden
   }
 }();
+
+// ~~~~~~~~~ sidebar side ~~~~~~~~~
+
+function SetSidebarSide(side) {
+  if (side === 'left') {
+    main.classList.add('sidebar-left');
+    main.classList.remove('sidebar-right');
+  } else if (side === 'right') {
+    main.classList.add('sidebar-right');
+    main.classList.remove('sidebar-left');
+  } else {
+    console.error('sidebar side is incorrect: ' + side);
+  }
+  console.log(side);
+}
 
 // ~~~~~~~~~ utility functions ~~~~~~~~~
 
