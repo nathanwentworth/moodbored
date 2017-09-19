@@ -25,8 +25,8 @@ let imgFileTypes = /.(jpg|png|gif|jpeg|bmp|webp|svg)/;
 // container elements
 let body = document.getElementsByTagName('body')[0];
 let mainContainer = document.getElementById('main');
-let leftSide = document.getElementById('left');
-let rightSide = document.getElementById('right');
+let sidebar = document.getElementById('sidebar');
+let view = document.getElementById('view');
 let folderView = document.getElementById('folders');
 let imageView = document.getElementById('images');
 
@@ -194,8 +194,7 @@ function InitialLoad() {
   SetAllLinksExternal();
   SetVersionInfo();
 
-  ToggleSection(leftSide, !options.sidebar);
-  ToggleImageContainerSize(!options.sidebar);
+  ToggleSection(sidebar, !options.sidebar);
 
   let loadedPath = localStorage.getItem('lastDirectory');
   rootDirectory = localStorage.getItem('rootDirectory');
@@ -268,8 +267,9 @@ function AddEventsToButtons() {
   });
 
   hideSidePanelCtrl.addEventListener('click', function () {
-    ToggleSection(leftSide);
-    ToggleImageContainerSize();
+    ToggleSection(sidebar);
+    options.sidebar = !options.sidebar;
+    _options.save(options);
   });
 
   let optionsMenu = document.getElementById('options-menu');
@@ -308,8 +308,9 @@ function AddEventsToButtons() {
     } else {
       // esc, toggle sidebar
       if (e.keyCode == 27) {
-        ToggleSection(leftSide);
-        ToggleImageContainerSize();
+        ToggleSection(sidebar);
+        options.sidebar = !options.sidebar;
+        _options.save(options);
         // ?, toggle key command dialog
       } else if (e.shiftKey && e.keyCode == 191) {
         ToggleSection(keyCommandDialog);
@@ -556,11 +557,6 @@ function PreventScroll(force) {
 
 function ToggleSection(section, force) {
   section.classList.toggle('hidden', force);
-}
-
-function ToggleImageContainerSize(force) {
-  options.sidebar = !rightSide.classList.toggle('expand', force);
-  _options.save(options);
 }
 
 function ResizeImage(img) {
