@@ -9,51 +9,60 @@
     <style type="text/css" id="user-styles"></style>
   </head>
   <body>
-    <main id="main">
-    <section class="left visible" id="left">
+    <main id="main" class="sidebar-right">
+    <section class="sidebar-container visible left" id="sidebar">
+      <div class="sidebar">
+        <div class="folders" id="folders"></div>
+        <button id='open-folder-ctrl'>open folder</button>
+        <button id='options-ctrl'>options</button>
 
-      <div class="folders" id="folders"></div>
-      <button id='open-folder-ctrl'>open folder</button>
-      <button id='options-ctrl'>options</button>
+        <div class="options hidden" id="options-menu">
+          <div>
+            <label data-option="columns">columns: <span id="image-width-label"></span></label>
+            <input data-option="columns" type="range" id='image-width-ctrl' min='1' max='9'>
+          </div>
 
-      <div class="options hidden" id="options-menu">
-        <div>
-          <label data-option="columns">columns: <span id="image-width-label"></span></label>
-          <input data-option="columns" type="range" id='image-width-ctrl' min='1' max='9'>
+          <div>
+            <label data-option="gutter">gutter: <span id="gutter-width-label"></span></label>
+            <input data-option="gutter" type="range" id='gutter-width-ctrl' min='0' max='64'>
+          </div>
+
+          <div>
+            <label data-option="background">background: </label>
+            <input data-option="background" type="text" class="inline" id='background-ctrl'>
+          </div>
+
+          <div>
+            <label data-option="userStyles">custom css:</label>
+            <textarea data-option="userStyles" id='user-styles-ctrl'></textarea>
+          </div>
+
+          <div>
+            <label data-option="moveFiles">move files:</label>
+            <input data-option="moveFiles" type="checkbox" id="move-files-ctrl">
+          </div>
+
+          <div>
+            <label data-option="confirmDelete">confirm on delete:</label>
+            <input data-option="confirmDelete" type="checkbox" id="confirm-delete-ctrl">
+          </div>
+
+          <div>
+            <label data-option="sidebarSide">sidebar side:</label>
+            <select data-option="sidebarSide" type="select" id="sidebar-side-ctrl">
+              <option value="left">left</option>
+              <option value="right">right</option>
+            </select>
+          </div>
+
+          <button data-btn="help" id="help-ctrl">help!</button>
+          <button data-btn="info" id="info-ctrl">about</button>
         </div>
-
-        <div>
-          <label data-option="gutter">gutter: <span id="gutter-width-label"></span></label>
-          <input data-option="gutter" type="range" id='gutter-width-ctrl' min='0' max='64'>
-        </div>
-
-        <div>
-          <label data-option="background">background: </label>
-          <input data-option="background" type="text" class="inline" id='background-ctrl'>
-        </div>
-
-        <div>
-          <label data-option="userStyles">custom css:</label>
-          <textarea data-option="userStyles" id='user-styles-ctrl'></textarea>
-        </div>
-
-        <div>
-          <label data-option="moveFiles">move files:</label>
-          <input data-option="moveFiles" type="checkbox" id="move-files-ctrl">
-        </div>
-
-        <div>
-          <label data-option="confirmDelete">confirm on delete:</label>
-          <input data-option="confirmDelete" type="checkbox" id="confirm-delete-ctrl">
-        </div>
-
-        <button data-btn="help" id="help-ctrl">help!</button>
-        <button data-btn="info" id="info-ctrl">about</button>
       </div>
 
     </section>
     <button id="hide-side-panel-ctrl">hide/show</button>
-    <section id="right" class="right">
+    <section id="view" class="view">
       <div class="images" id="images"></div>
       <div class="dropzone hidden" id="image-drop">placeholder text</div>
     </section>

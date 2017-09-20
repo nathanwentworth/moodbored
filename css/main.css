@@ -24,6 +24,8 @@ main {
   flex-wrap: nowrap;
   opacity: 0;
 }
+main.sidebar-left { flex-direction: row; }
+main.sidebar-right { flex-direction: row-reverse; }
 
 section {
   display: inline-block;
@@ -42,23 +44,30 @@ li {
   margin: 12px;
 }
 
-.left {
+.sidebar-container {
+  background: #fff;
+  position: relative;
+  width: 300px;
+  flex-shrink: 0;
+  box-shadow: 0 0 8px #c1c2c3;
+}
+.sidebar {
   background: #fff;
   height: 100%;
   position: fixed;
-  width: 300px;
+  /*width: 100%;*/
   overflow: scroll;
   padding-bottom: 3rem;
-  box-shadow: 0 0 8px #c1c2c3;
 }
-.right {
+.view {
   position: relative;
-  width: calc(100% - 300px);
+  /*width: calc(100% - 300px);*/
+  width: 100%;
   margin-left: auto;
 }
-.right.expand {
+.view.expand {
   width: 100%;
-  margin-left: 16px;
+  /*margin-left: 16px;*/
 }
 
 .dropzone {
@@ -77,7 +86,7 @@ li {
   transition: opacity 0.1s;
 }
 
-.right.expand .dropzone {
+.view.expand .dropzone {
   width: 100vw;
 }
 
@@ -195,9 +204,14 @@ label {
 
 #hide-side-panel-ctrl {
   position: fixed;
-  left: 16px;
   bottom: 16px;
   z-index: 900;
+}
+main.sidebar-left #hide-side-panel-ctrl {
+  left: 16px;
+}
+main.sidebar-right #hide-side-panel-ctrl {
+  right: 16px;
 }
 
 .hidden {

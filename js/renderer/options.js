@@ -5,6 +5,7 @@ const defaults = {
   background: '#f1f2f3',
   userStyles: '',
   sidebar: true,
+  sidebarSide: 'left',
   moveFile: false,
   confirmDelete: true
 }
@@ -35,6 +36,9 @@ module.exports.elements = {
   },
   confirmDelete: {
     ctrl: document.getElementById('confirm-delete-ctrl')
+  },
+  sidebarSide: {
+    ctrl: document.getElementById('sidebar-side-ctrl')
   }
 }
 

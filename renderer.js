@@ -25,8 +25,8 @@ let imgFileTypes = /.(jpg|png|gif|jpeg|bmp|webp|svg)/;
 // container elements
 let body = document.getElementsByTagName('body')[0];
 let mainContainer = document.getElementById('main');
-let leftSide = document.getElementById('left');
-let rightSide = document.getElementById('right');
+let sidebar = document.getElementById('sidebar');
+let view = document.getElementById('view');
 let folderView = document.getElementById('folders');
 let imageView = document.getElementById('images');
 
@@ -194,8 +194,7 @@ function InitialLoad() {
   SetAllLinksExternal();
   SetVersionInfo();
 
-  ToggleSection(leftSide, !options.sidebar);
-  ToggleImageContainerSize(!options.sidebar);
+  ToggleSection(sidebar, !options.sidebar);
 
   let loadedPath = localStorage.getItem('lastDirectory');
   rootDirectory = localStorage.getItem('rootDirectory');
@@ -220,7 +219,8 @@ function InitialLoad() {
 function OptionsInit() {
   Object.keys(_options.elements).forEach((key) => {
     var optionElement = _options.elements[key];
-    optionElement.ctrl.value = _options[key];
+    optionElement.ctrl.value = options[key];
+    console.log(key + ': ' + optionElement.ctrl.value);
     optionElement.ctrl.checked = _options[key];
     if (optionElement.label) {
       optionElement.label.innerText = _options[key];
@@ -229,6 +229,7 @@ function OptionsInit() {
 
   mainContainer.style.backgroundColor = options.background;
   _options.elements.userStyles.elem.innerText = options.userStyles;
+  SetSidebarSide(options.sidebarSide);
 }
 
 function OptionsController(e) {
@@ -255,6 +256,11 @@ function OptionsController(e) {
       options[opt] = target.value;
       _options.elements.userStyles.elem.innerText = options.userStyles;
     }
+  } else if (target.tagName == 'SELECT') {
+    if (opt == 'sidebarSide') {
+      options[opt] = target.value;
+      SetSidebarSide(target.value);
+    }
   }
 
   _options.save(options);
@@ -268,8 +274,9 @@ function AddEventsToButtons() {
   });
 
   hideSidePanelCtrl.addEventListener('click', function () {
-    ToggleSection(leftSide);
-    ToggleImageContainerSize();
+    ToggleSection(sidebar);
+    options.sidebar = !options.sidebar;
+    _options.save(options);
   });
 
   let optionsMenu = document.getElementById('options-menu');
@@ -308,8 +315,9 @@ function AddEventsToButtons() {
     } else {
       // esc, toggle sidebar
       if (e.keyCode == 27) {
-        ToggleSection(leftSide);
-        ToggleImageContainerSize();
+        ToggleSection(sidebar);
+        options.sidebar = !options.sidebar;
+        _options.save(options);
         // ?, toggle key command dialog
       } else if (e.shiftKey && e.keyCode == 191) {
         ToggleSection(keyCommandDialog);
@@ -542,6 +550,21 @@ var lightbox = function () {
   }
 }();
 
+// ~~~~~~~~~ sidebar side ~~~~~~~~~
+
+function SetSidebarSide(side) {
+  if (side === 'left') {
+    main.classList.add('sidebar-left');
+    main.classList.remove('sidebar-right');
+  } else if (side === 'right') {
+    main.classList.add('sidebar-right');
+    main.classList.remove('sidebar-left');
+  } else {
+    console.error('sidebar side is incorrect: ' + side);
+  }
+  console.log(side);
+}
+
 // ~~~~~~~~~ utility functions ~~~~~~~~~
 
 function ResizeImages() {
@@ -556,11 +579,6 @@ function PreventScroll(force) {
 
 function ToggleSection(section, force) {
   section.classList.toggle('hidden', force);
-}
-
-function ToggleImageContainerSize(force) {
-  options.sidebar = !rightSide.classList.toggle('expand', force);
-  _options.save(options);
 }
 
 function ResizeImage(img) {
