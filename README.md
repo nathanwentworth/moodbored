@@ -1,6 +1,6 @@
 # moodbored
 
-![moodbored screenshot](https://github.com/nathanwentworth/moodbored/blob/master/docs/assets/img/moodbored-screenshot.png)
+![moodbored screenshot](https://github.com/nathanwentworth/moodbored/blob/master/docs/assets/img/moodbored-00001.png)
 
 an electron moodboard app
 
