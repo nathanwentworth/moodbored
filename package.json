@@ -1,6 +1,6 @@
 {
   "name": "moodbored",
-  "version": "0.5.4",
+  "version": "0.5.5",
   "description": "a moodboard/image viewer",
   "main": "./main.js",
   "scripts": {
