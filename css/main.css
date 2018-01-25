@@ -112,11 +112,8 @@ li {
 }
 
 .images {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-content: center;
+  text-align: center;
+  display: block;
   user-select: none;
   min-height: 90vh;
 }
@@ -132,6 +129,16 @@ li {
   opacity: 1;
   transition: opacity 0.3s;
 }
+
+.columns-1 { width: 100%; }
+.columns-2 { width: 50%; }
+.columns-3 { width: 33.3333333%; }
+.columns-4 { width: 25%; }
+.columns-5 { width: 20%; }
+.columns-6 { width: 16.666666%; }
+.columns-7 { width: 14.285714%; }
+.columns-8 { width: 12.5%; }
+.columns-9 { width: 11.111111%; }
 
 .pop-up {
   background: #fff;

@@ -86,6 +86,7 @@ var dropzone = function () {
       }
     } else {
       let data = e.dataTransfer.getData('text/html');
+      console.log(data);
       upload(data, altPath, false);
     }
   }
@@ -474,7 +475,7 @@ function CreateImage(path, file, dropped) {
   let img = new Image();
   let src = path + '/' + file;
   img.src = src;
-  ResizeImage(img);
+  ResizeImages();
   imageView.appendChild(img);
   img.onload = function () {
     img.classList.add('img-loaded');
@@ -568,9 +569,12 @@ function SetSidebarSide(side) {
 // ~~~~~~~~~ utility functions ~~~~~~~~~
 
 function ResizeImages() {
-  imageElements.forEach((element) => {
-    ResizeImage(element);
-  })
+  imageView.style.columnCount = options.columns;
+  imageView.style.columnGap = options.gutter + 'px';
+  document.getElementById('image-gutter-style').innerText = `
+  .images img {
+    margin-bottom: ${options.gutter}px;
+  }`
 }
 
 function PreventScroll(force) {
@@ -579,11 +583,6 @@ function PreventScroll(force) {
 
 function ToggleSection(section, force) {
   section.classList.toggle('hidden', force);
-}
-
-function ResizeImage(img) {
-  img.style.width = "calc(100% / " + options.columns + " - " + (options.gutter * 2) + "px)";
-  img.style.margin = options.gutter + "px";
 }
 
 function ClearChildren(parent) {
