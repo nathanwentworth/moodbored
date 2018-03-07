@@ -202,7 +202,7 @@ function InitialLoad() {
   console.log('> root is ' + rootDirectory);
 
   if (rootDirectory == null || rootDirectory == '') {
-    HowToDialogToggle();
+    ToggleSection(howToDialog, false)
   } else {
     GetNewDirectoryStructure(rootDirectory);
     CreateFolderView();
