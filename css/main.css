@@ -7,8 +7,7 @@
 }
 
 :focus {
-  outline: none;
-  box-shadow: 0 0 0 2pt #55f;
+  /*outline: none;*/
 }
 
 body {
@@ -55,9 +54,8 @@ li {
   background: #fff;
   height: 100%;
   position: fixed;
-  /*width: 100%;*/
-  overflow: scroll;
-  padding-bottom: 3rem;
+  overflow-y: scroll;
+  padding-bottom: 5rem;
 }
 .view {
   position: relative;
@@ -102,9 +100,14 @@ li {
   margin: 0;
 }
 
-.folders button:hover {
+.folders button:hover,
+.folders button:focus {
   color: #f55;
+  outline: none;
   background-color: transparent;
+}
+.folders button.active {
+  color: #6528DD;
 }
 
 .options div {
@@ -183,9 +186,13 @@ input[type=button], button {
 }
 
 
-input[type=button]:hover, button:hover {
+input[type=button]:hover,
+input[type=button]:focus,
+button:hover,
+button:focus {
   background: #f55;
   color: #fff;
+  outline: none;
 }
 
 input[type=range] {

@@ -30,6 +30,8 @@ let view = document.getElementById('view');
 let folderView = document.getElementById('folders');
 let imageView = document.getElementById('images');
 
+let lastFolderButton = null;
+
 // option/input elements
 let openFolderCtrl = document.getElementById('open-folder-ctrl');
 
@@ -98,43 +100,44 @@ var dropzone = function () {
       _data = _data.substring(_data.indexOf('src="') + 5).match(imgSrc)[0];
     }
 
-    var isImage = (localFile) ? _data.type.match(imgFileTypes) : _data.match(imgFileTypes);
+    let isImage = (localFile) ? _data.type.match(imgFileTypes) : _data.match(imgFileTypes);
 
-    if (isImage) {
-      let date = new Date().toISOString().replace(/:/gi, '.');
-      name = (localFile) ? _data.name : date + isImage[0];
-      path += name;
-
-      if (!fs.existsSync(path)) {
-        let r = (localFile) ? fs.createReadStream(_data.path) : request(_data);
-        if (localFile) {
-          r.on('open', () => {
-            writeImage();
-          })
-        } else {
-          writeImage();
-        }
-
-        function writeImage() {
-          r.pipe(fs.createWriteStream(path));
-          r.on('end', function() {
-            console.log('image done loading, creating image');
-            CreateImage(currentPath, name, true);
-          });
-        }
-
-        if (localFile && options.moveFile) {
-          fs.unlinkSync(_data.path);
-        }
-
-        notification(true, name);
-
-      } else {
-        notification(false, name, 'file already exists');
-      }
-    } else {
+    if (!isImage) {
       notification(false, name, 'not an image');
+      return;
     }
+
+    let date = new Date().toISOString().replace(/:/gi, '.');
+    name = (localFile) ? _data.name : date + isImage[0];
+    path += name;
+
+    if (fs.existsSync(path)) {
+      notification(false, name, 'file already exists');
+      return;
+    }
+
+    let r = (localFile) ? fs.createReadStream(_data.path) : request(_data);
+    if (localFile) {
+      r.on('open', () => {
+        writeImage();
+      })
+    } else {
+      writeImage();
+    }
+
+    function writeImage() {
+      r.pipe(fs.createWriteStream(path));
+      r.on('end', function() {
+        console.log('image done loading, creating image');
+        CreateImage(currentPath, name, true);
+      });
+    }
+
+    if (localFile && options.moveFile) {
+      fs.unlinkSync(_data.path);
+    }
+
+    notification(true, name);
   }
 
   function notification (success, name, reason, time) {
@@ -145,9 +148,7 @@ var dropzone = function () {
     text = name + result + _reason;
     dropzone.elem.innerText = text;
     setTimeout(() => {
-      if (!dropzone.elem.classList.contains('hidden')) {
-        dropzone.elem.classList.add('hidden');
-      }
+      dropzone.elem.classList.add('hidden');
     }, _time);
   }
 
@@ -333,13 +334,13 @@ function OpenNewRootFolder() {
     if (folder === undefined) {
       console.log("no file selected");
       return;
-    } else {
-      console.log(folder);
-      let _root = folder[0];
-      GetNewDirectoryStructure(_root);
-      LoadDirectoryContents(_root, true);
-      CreateFolderView();
     }
+
+    console.log(folder);
+    let _root = folder[0];
+    GetNewDirectoryStructure(_root);
+    LoadDirectoryContents(_root, true);
+    CreateFolderView();
   })
 }
 
@@ -400,6 +401,11 @@ function CreateFolderView() {
     sp.appendChild(spText);
 
     sp.addEventListener('click', () => {
+      if (lastFolderButton) {
+        lastFolderButton.classList.remove('active')
+      }
+      lastFolderButton = sp;
+      sp.classList.add('active')
       LoadDirectoryContents(totalPath);
     });
 
