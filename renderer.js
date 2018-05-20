@@ -77,21 +77,15 @@ var dropzone = function () {
   }
 
   function drop (e, altPath) {
-    let files = e.dataTransfer.files;
-    // if f is true, it's a file, false it's data
-    let f = (files.length > 0);
-    if (f) {
-      for (let file of files) {
-        upload(file, altPath, true);
-      }
-    } else {
-      let data = e.dataTransfer.getData('text/html');
-      console.log(data);
-      upload(data, altPath, false);
+    let localFile = (e.dataTransfer.files.length > 0);
+    let files = (localFile) ? e.dataTransfer.files : [e.dataTransfer.getData('text/html')];
+    // if localFile is true, it's a file, false it's data
+    for (let file of files) {
+      upload(file, altPath, localFile);
     }
   }
 
-  function upload(data, altPath, f) {
+  function upload(data, altPath, localFile) {
     // set local data var
     let _data = data;
 
@@ -99,20 +93,21 @@ var dropzone = function () {
     let path = _currentPath + '/';
     let name = '';
 
-    if (!f) {
+    if (!localFile) {
       let imgSrc = /http[^"\n\r]*(?=")/i;
       _data = _data.substring(_data.indexOf('src="') + 5).match(imgSrc)[0];
     }
 
-    var isImage = (f) ? _data.type.match(imgFileTypes) : _data.match(imgFileTypes);
+    var isImage = (localFile) ? _data.type.match(imgFileTypes) : _data.match(imgFileTypes);
 
     if (isImage) {
-      name = (f) ? _data.name : _data.substring(_data.lastIndexOf('/') + 1);
+      let date = new Date().toISOString().replace(/:/gi, '.');
+      name = (localFile) ? _data.name : date + isImage[0];
       path += name;
 
       if (!fs.existsSync(path)) {
-        let r = (f) ? fs.createReadStream(_data.path) : request(_data);
-        if (f) {
+        let r = (localFile) ? fs.createReadStream(_data.path) : request(_data);
+        if (localFile) {
           r.on('open', () => {
             writeImage();
           })
@@ -128,7 +123,7 @@ var dropzone = function () {
           });
         }
 
-        if (f && options.moveFile) {
+        if (localFile && options.moveFile) {
           fs.unlinkSync(_data.path);
         }
 
@@ -446,26 +441,26 @@ function LoadDirectoryContents(path, newRoot) {
 function LoadImages(currentPath) {
   imageSrcs = [];
   fs.readdir(currentPath, (err, dir) => {
-    if (dir.length > 0) {
-      // filter the directory for only image files
-      let filteredDir = dir.filter((f) => {
-        return f.match(imgFileTypes);
-      });
+    if (dir.length <= 0) { return; }
 
-      let _index = 0;
-      for (let file of filteredDir) {
-        _index++;
-        imageSrcs.push(file);
-        if (_index >= filteredDir.length) {
-          // done loading all images
-          // sort array
-          imageSrcs = imageSrcs.sort();
-          // then create elements
-          for (let img of imageSrcs) {
-            CreateImage(currentPath, img);
-          }
-          console.log('> done loading all images');
+    // filter the directory for only image files
+    let filteredDir = dir.filter((f) => {
+      return f.match(imgFileTypes);
+    });
+
+    let _index = 0;
+    for (let file of filteredDir) {
+      _index++;
+      imageSrcs.push(file);
+      if (_index >= filteredDir.length) {
+        // done loading all images
+        // sort array
+        imageSrcs = imageSrcs.sort();
+        // then create elements
+        for (let img of imageSrcs) {
+          CreateImage(currentPath, img);
         }
+        console.log('> done loading all images');
       }
     }
   })
@@ -475,6 +470,7 @@ function CreateImage(path, file, dropped) {
   let img = new Image();
   let src = path + '/' + file;
   img.src = src;
+  img.dataset.index = imageElements.length;
   ResizeImages();
   imageView.appendChild(img);
   img.onload = function () {
@@ -483,13 +479,12 @@ function CreateImage(path, file, dropped) {
   if (dropped) {
     img.classList.add('img-loaded');
   }
-  let _index = imageElements.length + 1
   img.addEventListener('click', imageEvents, false);
   imageElements.push(img);
 
   function imageEvents() {
     lightbox.setImg(img);
-    lightbox.index = _index;
+    lightbox.setIndex(+img.dataset.index);
     PreventScroll(true);
   }
 }
@@ -501,7 +496,7 @@ var lightbox = function () {
   var img = document.getElementById('lightboxImg');
   var arrowL = document.getElementById('arrow-left');
   var arrowR = document.getElementById('arrow-right');
-  var index = 0;
+  let index = 0;
   var hidden = !elem.classList.contains('hidden');
 
   function init() {
@@ -526,6 +521,10 @@ var lightbox = function () {
     lightbox.display(true);
   }
 
+  function setIndex(_index) {
+    index = _index;
+  }
+
   function increment(amount) {
     index += amount;
     if (index < 0) {
@@ -547,6 +546,7 @@ var lightbox = function () {
     increment: increment,
     display: display,
     index: index,
+    setIndex: setIndex,
     hidden: hidden
   }
 }();
