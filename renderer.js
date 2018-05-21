@@ -88,22 +88,38 @@ var dropzone = function () {
   }
 
   function upload(data, altPath, localFile) {
+    let isFolder = !data.type
+    if (isFolder) {
+      console.log('is a folder!')
+      console.log(data.path)
+      let _root = data.path;
+      console.log(_root)
+      GetNewDirectoryStructure(_root);
+      LoadDirectoryContents(_root, true);
+      CreateFolderView();
+
+      notification({ custom: 'new folder successfully added!' });
+      return;
+    }
     // set local data var
     let _data = data;
 
     let _currentPath = altPath || currentPath;
     let path = _currentPath + '/';
     let name = '';
+    let domain = '';
 
     if (!localFile) {
       let imgSrc = /http[^"\n\r]*(?=")/i;
       _data = _data.substring(_data.indexOf('src="') + 5).match(imgSrc)[0];
+      domain = _data.substring(0, _data.indexOf('/') + 1)
+      // console.log('domain: ' + domain)
     }
 
     let isImage = (localFile) ? _data.type.match(imgFileTypes) : _data.match(imgFileTypes);
 
     if (!isImage) {
-      notification(false, name, 'not an image');
+      notification({ success: false, name: name, reason: 'not an image' });
       return;
     }
 
@@ -112,7 +128,7 @@ var dropzone = function () {
     path += name;
 
     if (fs.existsSync(path)) {
-      notification(false, name, 'file already exists');
+      notification({ success: false, name: name, reason: 'file already exists' });
       return;
     }
 
@@ -137,15 +153,32 @@ var dropzone = function () {
       fs.unlinkSync(_data.path);
     }
 
-    notification(true, name);
+    notification({ success: true, name: name });
   }
 
-  function notification (success, name, reason, time) {
-    let _time = time || 1250;
-    let _reason = reason || '';
+
+  // arg object structure
+  // success, name, reason, time
+  // {
+  //   success: bool,
+  //   name: string,
+  //   reason: string,
+  //   time: int
+  // }
+  function notification (args) {
+    let _time = args.time || 1250;
+    if (args.custom) {
+      dropzone.elem.innerText = args.custom
+      setTimeout(() => {
+        dropzone.elem.classList.add('hidden');
+      }, _time);
+      return;
+    }
+    let _name = args.name || 'this file';
+    let _reason = args.reason || '';
     let text = '';
-    let result = (success) ? ' successfully added!' : ' not added, ';
-    text = name + result + _reason;
+    let result = (args.success) ? ' successfully added!' : ' not added, ';
+    text = _name + result + _reason;
     dropzone.elem.innerText = text;
     setTimeout(() => {
       dropzone.elem.classList.add('hidden');
