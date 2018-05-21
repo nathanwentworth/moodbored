@@ -21,12 +21,12 @@
   "author": "nathan wentworth <me@nathanwentworth.co>",
   "license": "CC0-1.0",
   "devDependencies": {
-    "electron": "^1.8.2-beta.4",
-    "electron-packager": "^8.1.0"
+    "electron": "^1.8.7",
+    "electron-packager": "^12.1.0"
   },
   "dependencies": {
-    "bricks.js": "^1.8.0",
     "image-size": "^0.6.2",
+    "npm": "^6.0.1",
     "request": "^2.83.0",
     "teeny-conf": "^1.1.0",
     "trash": "^4.2.1"
