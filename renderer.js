@@ -88,7 +88,7 @@ var dropzone = function () {
   }
 
   function upload(data, altPath, localFile) {
-    let isFolder = !data.type
+    let isFolder = !data.type && localFile
     if (isFolder) {
       console.log('is a folder!')
       console.log(data.path)
