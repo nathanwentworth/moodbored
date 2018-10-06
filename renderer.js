@@ -427,30 +427,40 @@ function CreateFolderView() {
   }
 
   function CreateFolderElement(totalPath) {
-    let sp = document.createElement('button');
-    let spTextContent = totalPath.replace(rootDirectory + "/", "");
-    spTextContent = spTextContent.replace("/", " / ");
-    let spText = document.createTextNode(spTextContent);
-    sp.appendChild(spText);
+    let folderButton = document.createElement('button');
+    let trimmedFolderButtonTextContent = totalPath.replace(rootDirectory + "/", "");
+    console.log('creating', trimmedFolderButtonTextContent)
+    let folderHierarchy = trimmedFolderButtonTextContent.split('/');
+    console.log('folderHierarchy', folderHierarchy)
+    for (var i = 0; i < folderHierarchy.length; i++) {
+      // if (folderHierarchy[i].length > 16) {
+      //   folderHierarchy[i] = folderHierarchy[i].substring(0,15) + '…'
+      //   console.log('folder name is too long!', folderHierarchy[i])
+      // }
+    }
+    let folderButtonTextContent = folderHierarchy.join(' / ');
 
-    sp.addEventListener('click', () => {
+    folderButton.setAttribute('title', trimmedFolderButtonTextContent)
+    folderButton.innerText = folderButtonTextContent;
+
+    folderButton.addEventListener('click', () => {
       if (lastFolderButton) {
         lastFolderButton.classList.remove('active')
       }
-      lastFolderButton = sp;
-      sp.classList.add('active')
+      lastFolderButton = folderButton;
+      folderButton.classList.add('active')
       LoadDirectoryContents(totalPath);
     });
 
-    sp.addEventListener('dragover', dropzone.copy, false);
+    folderButton.addEventListener('dragover', dropzone.copy, false);
 
-    sp.addEventListener('drop', (e) => {
+    folderButton.addEventListener('drop', (e) => {
       e.stopPropagation();
       e.preventDefault();
       dropzone.drop(e, totalPath);
     }, false)
 
-    folderView.appendChild(sp);
+    folderView.appendChild(folderButton);
   }
 }
 
