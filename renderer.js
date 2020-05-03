@@ -3,7 +3,7 @@
 const moodbored = 'moodbored';
 
 // requires
-const { remote } = require('electron');
+const { remote, clipboard, nativeImage } = require('electron');
 const { Menu, MenuItem } = remote;
 const { dialog } = remote;
 const fs = require('fs');
@@ -31,6 +31,8 @@ let folderView = document.getElementById('folders');
 let imageView = document.getElementById('images');
 
 let lastFolderButton = null;
+
+let imageData = {};
 
 // option/input elements
 let openFolderCtrl = document.getElementById('open-folder-ctrl');
@@ -243,6 +245,8 @@ function InitialLoad() {
     }
   }
 
+  loadDb();
+
   mainContainer.classList.add('fade-in');
 }
 
@@ -431,7 +435,7 @@ function CreateFolderView() {
     let trimmedFolderButtonTextContent = totalPath.replace(rootDirectory + "/", "");
     console.log('creating', trimmedFolderButtonTextContent)
     let folderHierarchy = trimmedFolderButtonTextContent.split('/');
-    console.log('folderHierarchy', folderHierarchy)
+    // console.log('folderHierarchy', folderHierarchy)
     for (var i = 0; i < folderHierarchy.length; i++) {
       // if (folderHierarchy[i].length > 16) {
       //   folderHierarchy[i] = folderHierarchy[i].substring(0,15) + '…'
@@ -520,6 +524,7 @@ function CreateImage(path, file, dropped) {
   let src = path + '/' + file;
   img.src = src;
   img.dataset.index = imageElements.length;
+  img.dataset.name = file;
   ResizeImages();
   imageView.appendChild(img);
   img.onload = function () {
@@ -538,35 +543,106 @@ function CreateImage(path, file, dropped) {
   }
 }
 
+function saveDb() {
+  console.log('saving db!');
+  fs.writeFile(rootDirectory + '/moodbored.json', JSON.stringify(imageData), (err) => {
+    if (err) throw err;
+    console.log('saved data!', imageData);
+  })
+}
+
+function loadDb() {
+  let dataDir = rootDirectory + '/moodbored.json';
+  if (fs.existsSync(dataDir)) {
+    imageData = JSON.parse(fs.readFileSync(dataDir));
+    console.log('loaded data!');
+  }
+}
+
+function copyImage(src) {
+  clipboard.writeImage(nativeImage.createFromPath(src));
+}
+
 // ~~~~~~~~~ lightbox ~~~~~~~~~
 
-var lightbox = function () {
-  var elem = document.getElementById('lightbox');
-  var img = document.getElementById('lightboxImg');
-  var arrowL = document.getElementById('arrow-left');
-  var arrowR = document.getElementById('arrow-right');
+let lightbox = function () {
+  let elem = document.getElementById('lightbox');
+  let img = document.getElementById('lightboxImg');
+  let currentImage = null;
+  let description = {
+    close: elem.querySelector('.close'),
+    title: elem.querySelector('.file-name'),
+    notes: elem.querySelector('.notes'),
+    source: elem.querySelector('.source'),
+    save: elem.querySelector('.save'),
+    copy: elem.querySelector('.copy'),
+  }
+  let arrowL = document.getElementById('arrow-left');
+  let arrowR = document.getElementById('arrow-right');
   let index = 0;
-  var hidden = !elem.classList.contains('hidden');
+  let hidden = !elem.classList.contains('hidden');
 
   function init() {
     arrowL.addEventListener('click', function (e) {
       increment(-1);
       e.stopPropagation();
-    })
+    });
 
     arrowR.addEventListener('click', function (e) {
       increment(1);
       e.stopPropagation();
-    })
+    });
 
-    elem.addEventListener('click', function () {
+    // img.addEventListener('click', function () {
+    //   display(false);
+    // }, false);
+
+    description.close.addEventListener('click', function () {
       display(false);
-    }, false)
+    }, false);
+
+    description.copy.addEventListener('click', function () {
+      copyImage(currentImage.src);
+    }, false);
+
+    description.save.addEventListener('click', () => {
+      if (!imageData[currentImage.dataset.name]) {
+        imageData[currentImage.dataset.name] = {};
+      }
+
+      imageData[currentImage.dataset.name].notes = description.notes.value;
+      saveDb();
+    });
+
   }
   init();
 
   function setImg(_img) {
+    currentImage = _img;
     img.src = _img.src;
+    description.title.textContent = _img.dataset.name;
+    arrowL.style.backgroundImage = 'url("' + getIncrementedImg(-1).img.src + '")';
+    arrowR.style.backgroundImage = 'url("' + getIncrementedImg(2).img.src + '")';
+    console.log(imageData, _img.dataset.name);
+    if (imageData[_img.dataset.name]) {
+      description.notes.value = imageData[_img.dataset.name].notes;
+    } else {
+      description.notes.value = '';
+    }
+    // const vw = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+    // const vh = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+    // let imageAspect = img.width / img.height;
+    // let browserAspect = vh / vw;
+    // if (imageAspect > browserAspect) {
+    //   elem.classList.add('vertical');
+    //   elem.classList.remove('horizontal');
+    //   // image is wider than browser, show info on bottom
+    // } else {
+    //   elem.classList.remove('vertical');
+    //   elem.classList.add('horizontal');
+    //   // image is narrower than browser, show info on side
+    // }
+    // console.log('image aspect', imageAspect);
     lightbox.display(true);
   }
 
@@ -575,13 +651,25 @@ var lightbox = function () {
   }
 
   function increment(amount) {
-    index += amount;
-    if (index < 0) {
-      index = imageElements.length - 1;
-    } else if (index >= imageElements.length) {
-      index = 0;
+    if (document.activeElement === description.notes) {
+      return;
     }
-    img.src = imageElements[index].src;
+    let val = getIncrementedImg(amount);
+    setImg(val.img);
+    setIndex(val.index);
+  }
+
+  function getIncrementedImg(amount) {
+    let _index = index += amount;
+    if (_index < 0) {
+      _index = imageElements.length - 1;
+    } else if (_index >= imageElements.length) {
+      _index = 0;
+    }
+    return {
+      img: imageElements[_index],
+      index: _index
+    };
   }
 
   function display(disp) {
@@ -646,7 +734,7 @@ function CreateRightClickMenu(target) {
   let src = target.src;
   let rightClickMenu = new Menu();
 
-  if (src != null && src.match(imgFileTypes)) {
+  if (src && src.match(imgFileTypes)) {
     src = src.replace(/%20/g, ' ');
     src = src.replace(/file:\/\//g, '');
     let _name = src.substring(src.lastIndexOf('/')+1);
@@ -682,6 +770,20 @@ function CreateRightClickMenu(target) {
         shell.showItemInFolder(src);
       }
     }));
+
+    rightClickMenu.append(new MenuItem({
+      label: 'Copy Image',
+      click() {
+        copyImage(src);
+      }
+    }));
+
+    // rightClickMenu.append(new MenuItem({
+    //   label: 'Paste Image',
+    //   click() {
+    //     clipboard.readImage();
+    //   }
+    // }));
   }
 
   return rightClickMenu;

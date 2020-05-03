@@ -106,10 +106,25 @@
 
     </main>
 
-    <div class="lightbox hidden" id="lightbox">
-      <img id="lightboxImg" src="#!">
-      <div class="arrow arrow-left" id="arrow-left">←</div>
-      <div class="arrow arrow-right" id="arrow-right">→</div>
+    <div class="lightbox hidden horizontal" id="lightbox">
+      <div class="img-container">
+        <img id="lightboxImg" class="lightbox-img" src="#!">
+      </div>
+      <div class="desc">
+        <div class="top">
+          <button class="close">X</button>
+          <h1 class="file-name"></h1>
+          <p><a href="#!" class="source"></a></p>
+          <textarea class="notes" placeholder="add description"></textarea>
+          <button class="save">save</button>
+          <button class="copy">copy image</button>
+          <button class="open">open image</button>
+        </div>
+        <div class="buttons">
+          <button class="arrow arrow-left" id="arrow-left">←</button>
+          <button class="arrow arrow-right" id="arrow-right">→</button>
+        </div>
+      </div>
     </div>
 
     <div class="hidden">

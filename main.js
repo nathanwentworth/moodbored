@@ -26,7 +26,11 @@ function createWindow () {
     backgroundColor: '#fbfbfb',
     icon: path.join(__dirname, '/icon/icon.png'),
     minWidth: 600,
-    minHeight: 460
+    minHeight: 460,
+    webPreferences: {
+      nodeIntegration: true
+    }
+
   })
 
   if (windowX != null && windowY != null) {
