@@ -124,12 +124,20 @@ li {
   display: block;
   user-select: none;
   min-height: 90vh;
+  display: grid;
+  grid-gap: 6px;
+  grid-template-columns: repeat( auto-fill, minmax( 200px, 1fr ) ); /* [2] Make columns adjust according to the available viewport */
+  grid-auto-rows: 250px; /* [3] Set the height for implicitly-created row track */
+}
+
+.images .container {
+  overflow: hidden;
 }
 
 .images img {
   max-width: 100%;
   height: auto;
-  display: inline-block;
+  /*display: inline-block;*/
   opacity: 0;
 }
 
@@ -138,15 +146,49 @@ li {
   transition: opacity 0.3s;
 }
 
-.columns-1 { width: 100%; }
-.columns-2 { width: 50%; }
-.columns-3 { width: 33.3333333%; }
-.columns-4 { width: 25%; }
-.columns-5 { width: 20%; }
-.columns-6 { width: 16.666666%; }
-.columns-7 { width: 14.285714%; }
-.columns-8 { width: 12.5%; }
-.columns-9 { width: 11.111111%; }
+.edit-image {
+  position: fixed;
+  left: 0;
+  top: 0;
+  background-color: rgba(255,255,255,0.8);
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 3;
+}
+
+.edit-image button {
+  display: inline-block;
+}
+
+.edit-image form {
+  width: 98%;
+  max-width: 432px;
+  background-color: #fff;
+  padding: 1rem;
+}
+
+.edit-image label,
+.edit-image input,
+.edit-image textarea {
+  display: block;
+  width: 100%;
+}
+
+.edit-image label {
+  margin-top: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+.edit-image textarea {
+  padding: 1rem;
+  min-height: 100px;
+}
+
+
+
 
 .pop-up {
   background: #fff;

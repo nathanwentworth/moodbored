@@ -114,9 +114,9 @@
         <div class="top">
           <button class="close">X</button>
           <h1 class="file-name"></h1>
-          <p><a href="#!" class="source"></a></p>
-          <textarea class="notes" placeholder="add description"></textarea>
-          <button class="save">save</button>
+          <p><a href="#!" class="source">source</a></p>
+          <div class="notes"></div>
+          <button class="edit">edit</button>
           <button class="copy">copy image</button>
           <button class="open">open image</button>
         </div>
@@ -127,16 +127,26 @@
       </div>
     </div>
 
-    <div class="hidden">
-      <div class="columns-1"></div>
-      <div class="columns-2"></div>
-      <div class="columns-3"></div>
-      <div class="columns-4"></div>
-      <div class="columns-5"></div>
-      <div class="columns-6"></div>
-      <div class="columns-7"></div>
-      <div class="columns-8"></div>
-      <div class="columns-9"></div>
+    <div class="edit-image hidden" id="edit-image">
+      <form>
+        <label for="filename">Filename</label>
+        <input type="text" name="filename" id="edit-filename">
+        <br>
+        <label for="title">Title</label>
+        <input type="text" name="title" id="edit-title">
+        <br>
+        <label for="source">Source (url)</label>
+        <input type="text" name="source" id="edit-source">
+        <br>
+        <label for="tags">Tags (comma separated)</label>
+        <input type="text" name="tags" id="edit-tags">
+        <br>
+        <label for="notes">Notes</label>
+        <textarea class="notes" name="notes" placeholder="add description" id="edit-notes"></textarea>
+        <br>
+        <button type="button" class="save" id="edit-save">save</button>
+        <button type="button" class="cancel" id="edit-cancel">cancel</button>
+      </form>
     </div>
   </body>
 

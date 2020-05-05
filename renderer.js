@@ -16,11 +16,13 @@ const _options = require('./js/renderer/options.js');
 // directory variables
 let rootDirectory = '';
 let currentPath = rootDirectory;
+let currentImage = null;
 
 // temporary element storage
 let imageElements = [];
-let imageSrcs = [];
 let imgFileTypes = /.(jpg|png|gif|jpeg|bmp|webp|svg)/;
+let vidFileTypes = /.(mp4|mov|webm|m4v)/;
+let txtFileTypes = /.(txt|md|markdown|mdown)/;
 
 // container elements
 let body = document.getElementsByTagName('body')[0];
@@ -29,6 +31,7 @@ let sidebar = document.getElementById('sidebar');
 let view = document.getElementById('view');
 let folderView = document.getElementById('folders');
 let imageView = document.getElementById('images');
+
 
 let lastFolderButton = null;
 
@@ -338,7 +341,11 @@ function AddEventsToButtons() {
     if (!lightbox.hidden) {
       // esc, close lightbox
       if (e.keyCode == 27) {
-        lightbox.display(false);
+        if (!edit.hidden) {
+          edit.hide();
+        } else {
+          lightbox.display(false);
+        }
         // left/a, go left in lightbox
       } else if (e.keyCode == 37 || e.keyCode == 65) {
         lightbox.increment(-1);
@@ -492,31 +499,22 @@ function LoadDirectoryContents(path, newRoot) {
 }
 
 function LoadImages(currentPath) {
-  imageSrcs = [];
   fs.readdir(currentPath, (err, dir) => {
     if (dir.length <= 0) { return; }
 
-    // filter the directory for only image files
-    let filteredDir = dir.filter((f) => {
-      return f.match(imgFileTypes);
-    });
+    for (let file of dir) {
+      let isImage = file.match(imgFileTypes);
+      if (isImage) {
+        CreateImage(currentPath, file);
+      } else if (file.match(vidFileTypes)) {
 
-    let _index = 0;
-    for (let file of filteredDir) {
-      _index++;
-      imageSrcs.push(file);
-      if (_index >= filteredDir.length) {
-        // done loading all images
-        // sort array
-        imageSrcs = imageSrcs.sort();
-        // then create elements
-        for (let img of imageSrcs) {
-          CreateImage(currentPath, img);
-        }
-        console.log('> done loading all images');
+      } else if (file.match(txtFileTypes)) {
+
       }
     }
-  })
+
+    console.log('> done loading all images');
+  });
 }
 
 function CreateImage(path, file, dropped) {
@@ -525,8 +523,12 @@ function CreateImage(path, file, dropped) {
   img.src = src;
   img.dataset.index = imageElements.length;
   img.dataset.name = file;
+  img.dataset.path = path;
   ResizeImages();
-  imageView.appendChild(img);
+  let container = document.createElement('div');
+  container.classList.add('container');
+  container.appendChild(img);
+  imageView.appendChild(container);
   img.onload = function () {
     img.classList.add('img-loaded');
   }
@@ -538,7 +540,6 @@ function CreateImage(path, file, dropped) {
 
   function imageEvents() {
     lightbox.setImg(img);
-    lightbox.setIndex(+img.dataset.index);
     PreventScroll(true);
   }
 }
@@ -555,7 +556,7 @@ function loadDb() {
   let dataDir = rootDirectory + '/moodbored.json';
   if (fs.existsSync(dataDir)) {
     imageData = JSON.parse(fs.readFileSync(dataDir));
-    console.log('loaded data!');
+    console.log('loaded data!', imageData);
   }
 }
 
@@ -568,13 +569,12 @@ function copyImage(src) {
 let lightbox = function () {
   let elem = document.getElementById('lightbox');
   let img = document.getElementById('lightboxImg');
-  let currentImage = null;
   let description = {
     close: elem.querySelector('.close'),
     title: elem.querySelector('.file-name'),
     notes: elem.querySelector('.notes'),
     source: elem.querySelector('.source'),
-    save: elem.querySelector('.save'),
+    edit: elem.querySelector('.edit'),
     copy: elem.querySelector('.copy'),
   }
   let arrowL = document.getElementById('arrow-left');
@@ -605,86 +605,156 @@ let lightbox = function () {
       copyImage(currentImage.src);
     }, false);
 
-    description.save.addEventListener('click', () => {
-      if (!imageData[currentImage.dataset.name]) {
-        imageData[currentImage.dataset.name] = {};
-      }
-
-      imageData[currentImage.dataset.name].notes = description.notes.value;
-      saveDb();
+    description.edit.addEventListener('click', () => {
+      edit.show();
     });
-
   }
   init();
 
   function setImg(_img) {
     currentImage = _img;
     img.src = _img.src;
-    description.title.textContent = _img.dataset.name;
-    arrowL.style.backgroundImage = 'url("' + getIncrementedImg(-1).img.src + '")';
-    arrowR.style.backgroundImage = 'url("' + getIncrementedImg(2).img.src + '")';
-    console.log(imageData, _img.dataset.name);
+    index = +_img.dataset.index;
+    description.title.setAttribute('alt', _img.dataset.name);
+    arrowL.style.backgroundImage = 'url("' + imageElements[getIncrementedIndex(-1)].src + '")';
+    arrowR.style.backgroundImage = 'url("' + imageElements[getIncrementedIndex(1)].src + '")';
+    // console.log(imageData, _img.dataset.name);
     if (imageData[_img.dataset.name]) {
-      description.notes.value = imageData[_img.dataset.name].notes;
+      description.title.textContent = imageData[_img.dataset.name].title || _img.dataset.name;
+      description.notes.textContent = imageData[_img.dataset.name].notes || '';
+      description.source.textContent = imageData[_img.dataset.name].source || '';
+      description.source.href = imageData[_img.dataset.name].source || '#!';
     } else {
-      description.notes.value = '';
+      description.title.textContent = _img.dataset.name;
+      description.notes.textContent = '';
+      description.source.textContent = '';
+      description.source.href = '#!';
     }
-    // const vw = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
-    // const vh = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
-    // let imageAspect = img.width / img.height;
-    // let browserAspect = vh / vw;
-    // if (imageAspect > browserAspect) {
-    //   elem.classList.add('vertical');
-    //   elem.classList.remove('horizontal');
-    //   // image is wider than browser, show info on bottom
-    // } else {
-    //   elem.classList.remove('vertical');
-    //   elem.classList.add('horizontal');
-    //   // image is narrower than browser, show info on side
-    // }
-    // console.log('image aspect', imageAspect);
     lightbox.display(true);
   }
 
-  function setIndex(_index) {
-    index = _index;
-  }
-
   function increment(amount) {
-    if (document.activeElement === description.notes) {
+    console.log(document.activeElement);
+    if (document.activeElement.tagName === 'TEXTAREA' || document.activeElement.tagName === 'INPUT') {
       return;
     }
-    let val = getIncrementedImg(amount);
-    setImg(val.img);
-    setIndex(val.index);
+    let val = getIncrementedIndex(amount);
+    setImg(imageElements[val]);
   }
 
-  function getIncrementedImg(amount) {
-    let _index = index += amount;
+  function getIncrementedIndex(amount) {
+    let _index = index + amount;
     if (_index < 0) {
       _index = imageElements.length - 1;
     } else if (_index >= imageElements.length) {
       _index = 0;
     }
-    return {
-      img: imageElements[_index],
-      index: _index
-    };
+    return _index;
   }
 
   function display(disp) {
+    if (disp === false) {
+      currentImage = null;
+    }
     hidden = !disp;
     ToggleSection(elem, !disp);
     PreventScroll(disp);
   }
 
   return {
-    setImg: setImg,
-    increment: increment,
-    display: display,
-    index: index,
-    setIndex: setIndex,
-    hidden: hidden
+    setImg,
+    increment,
+    display,
+    index,
+    hidden
+  }
+}();
+
+// ~~~~~~~~~ edit view ~~~~~~~~~~~~
+
+let edit = function () {
+  let hidden = true;
+  let elem = {
+    view: document.getElementById('edit-image'),
+    save: document.getElementById('edit-save'),
+    cancel: document.getElementById('edit-cancel'),
+    filename: document.getElementById('edit-filename'),
+    title: document.getElementById('edit-title'),
+    source: document.getElementById('edit-source'),
+    tags: document.getElementById('edit-tags'),
+    notes: document.getElementById('edit-notes'),
+  }
+
+  elem.cancel.addEventListener('click', hide);
+  elem.save.addEventListener('click', saveImageEdits);
+
+  function hide() {
+    elem.view.classList.add('hidden');
+    hidden = true;
+    elem.cancel.blur();
+  }
+
+  function show() {
+    elem.view.classList.remove('hidden');
+    hidden = false;
+    elem.filename.value = currentImage.dataset.name;
+    if (imageData[currentImage.dataset.name]) {
+      elem.title.value = imageData[currentImage.dataset.name].title || '';
+      elem.notes.value = imageData[currentImage.dataset.name].notes || '';
+      elem.source.value = imageData[currentImage.dataset.name].source || '';
+      elem.tags.value = imageData[currentImage.dataset.name].tags || '';
+    } else {
+      elem.title.value = '';
+      elem.notes.value = '';
+      elem.source.value = '';
+      elem.tags.value = '';
+    }
+  }
+
+  function saveImageEdits() {
+    let oldFileName = null;
+    if (elem.filename.value !== currentImage.dataset.name) {
+      let newFileName = (currentImage.dataset.path + '/' + elem.filename.value);
+      try {
+        fs.accessSync(newFileName, fs.constants.W_OK);
+        console.error('file already exists with that name!');
+      } catch (err) {
+        oldFileName = currentImage.src.replace('file://', '');
+        currentImage.src = newFileName;
+        currentImage.dataset.name = elem.filename.value;
+        console.log('old name', oldFileName, 'new name', newFileName);
+        fs.renameSync(decodeURIComponent(oldFileName), newFileName);
+      }
+
+    }
+
+    if (oldFileName && imageData[oldFileName]) {
+      imageData[currentImage.dataset.name] = imageData[oldFileName];
+      delete imageData[oldFileName];
+    }
+
+    if (!imageData[currentImage.dataset.name]) {
+      imageData[currentImage.dataset.name] = {};
+    }
+
+    imageData[currentImage.dataset.name].title = elem.title.value || '';
+    imageData[currentImage.dataset.name].source = elem.source.value || '';
+    imageData[currentImage.dataset.name].notes = elem.notes.value || '';
+    imageData[currentImage.dataset.name].tags = elem.tags.value || '';
+
+
+    lightbox.setImg(currentImage);
+    elem.view.classList.add('hidden');
+    hidden = true;
+    saveDb();
+  }
+
+
+
+  return {
+    show,
+    hide,
+    hidden
   }
 }();
 
@@ -700,14 +770,14 @@ function SetSidebarSide(side) {
   } else {
     console.error('sidebar side is incorrect: ' + side);
   }
-  console.log(side);
+  // console.log(side);
 }
 
 // ~~~~~~~~~ utility functions ~~~~~~~~~
 
 function ResizeImages() {
-  imageView.style.columnCount = options.columns;
-  imageView.style.columnGap = options.gutter + 'px';
+  // imageView.style.columnCount = options.columns;
+  // imageView.style.columnGap = options.gutter + 'px';
   document.getElementById('image-gutter-style').innerText = `
   .images img {
     margin-bottom: ${options.gutter}px;

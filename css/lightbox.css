@@ -1,6 +1,6 @@
 
 .lightbox {
-  z-index: 1000;
+  z-index: 2;
   position: fixed;
   top: 0;
   left: 0;
@@ -46,6 +46,9 @@
 .lightbox .desc .top {
   width: 100%;
 }
+.lightbox .source {
+  overflow-wrap: break-word;
+}
 
 .lightbox .notes {
   width: 90%;
@@ -61,6 +64,7 @@
 
 .lightbox h1 {
   margin-right: 2.5rem;
+  overflow-wrap: break-word;
 }
 
 .lightbox .lightbox-img {
