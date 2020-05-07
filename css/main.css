@@ -157,6 +157,12 @@ li {
   justify-content: center;
   align-items: center;
   z-index: 3;
+  overflow-y: scroll;
+}
+
+.edit-image img {
+  max-width: 100%;
+  height: auto;
 }
 
 .edit-image button {
@@ -194,12 +200,10 @@ li {
   background: #fff;
   border-radius: 6px;
   position: fixed;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
+  right: 32px;
+  bottom: 32px;
   max-width: 98vw;
   max-height: 98vh;
-  box-shadow: 0 0 16px #c1c2c3;
 }
 
 kbd {

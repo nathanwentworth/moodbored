@@ -7,7 +7,6 @@ const { remote, clipboard, nativeImage } = require('electron');
 const { Menu, MenuItem } = remote;
 const { dialog } = remote;
 const fs = require('fs');
-const request = require('request');
 const trash = require('trash');
 const shell = require('electron').shell;
 
@@ -44,6 +43,9 @@ let openFolderCtrl = document.getElementById('open-folder-ctrl');
 
 var dropzone = function () {
   var elem = document.getElementById('image-drop');
+  let droppedFiles = [];
+  let uploadIndex = 0;
+  let uploadPath = null;
 
   function init() {
     elem.addEventListener('dragover', copy, false)
@@ -84,16 +86,26 @@ var dropzone = function () {
   }
 
   function drop (e, altPath) {
-    let localFile = (e.dataTransfer.files.length > 0);
-    let files = (localFile) ? e.dataTransfer.files : [e.dataTransfer.getData('text/html')];
     // if localFile is true, it's a file, false it's data
-    for (let file of files) {
-      upload(file, altPath, localFile);
+    droppedFiles = e.dataTransfer.files;
+    uploadPath = altPath;
+    upload(droppedFiles[0], uploadPath);
+  }
+
+  function attemptUpload() {
+    uploadIndex++;
+    if (uploadIndex < droppedFiles.length) {
+      upload(droppedFiles[uploadIndex], uploadPath);
+      return true;
+    } else {
+      droppedFiles = [];
+      uploadPath = null;
+      return false;
     }
   }
 
-  function upload(data, altPath, localFile) {
-    let isFolder = !data.type && localFile
+  function upload(data, altPath) {
+    let isFolder = !data.type
     if (isFolder) {
       console.log('is a folder!')
       console.log(data.path)
@@ -114,14 +126,7 @@ var dropzone = function () {
     let name = '';
     let domain = '';
 
-    if (!localFile) {
-      let imgSrc = /http[^"\n\r]*(?=")/i;
-      _data = _data.substring(_data.indexOf('src="') + 5).match(imgSrc)[0];
-      domain = _data.substring(0, _data.indexOf('/') + 1)
-      // console.log('domain: ' + domain)
-    }
-
-    let isImage = (localFile) ? _data.type.match(imgFileTypes) : _data.match(imgFileTypes);
+    let isImage = _data.type.match(imgFileTypes);
 
     if (!isImage) {
       notification({ success: false, name: name, reason: 'not an image' });
@@ -129,7 +134,7 @@ var dropzone = function () {
     }
 
     let date = new Date().toISOString().replace(/:/gi, '.');
-    name = (localFile) ? _data.name : date + isImage[0];
+    name = _data.name;
     path += name;
 
     if (fs.existsSync(path)) {
@@ -137,24 +142,16 @@ var dropzone = function () {
       return;
     }
 
-    let r = (localFile) ? fs.createReadStream(_data.path) : request(_data);
-    if (localFile) {
-      r.on('open', () => {
-        writeImage();
-      })
-    } else {
-      writeImage();
-    }
+    let req = fs.createReadStream(_data.path);
+    req.on('open', () => {
+      req.pipe(fs.createWriteStream(path));
+    });
+    req.on('end', function() {
+      console.log('image done loading, creating image');
+      CreateImage(currentPath, name, true);
+    });
 
-    function writeImage() {
-      r.pipe(fs.createWriteStream(path));
-      r.on('end', function() {
-        console.log('image done loading, creating image');
-        CreateImage(currentPath, name, true);
-      });
-    }
-
-    if (localFile && options.moveFile) {
+    if (options.moveFile) {
       fs.unlinkSync(_data.path);
     }
 
@@ -191,9 +188,12 @@ var dropzone = function () {
   }
 
   return {
-    elem: elem,
-    copy: copy,
-    drop: drop
+    elem,
+    copy,
+    drop,
+    attemptUpload,
+    droppedFiles,
+    uploadIndex
   }
 }();
 
@@ -338,29 +338,27 @@ function AddEventsToButtons() {
   });
 
   window.addEventListener('keydown', function (e) {
-    if (!lightbox.hidden) {
-      // esc, close lightbox
-      if (e.keyCode == 27) {
-        if (!edit.hidden) {
-          edit.hide();
-        } else {
-          lightbox.display(false);
-        }
-        // left/a, go left in lightbox
-      } else if (e.keyCode == 37 || e.keyCode == 65) {
+    // esc, hide edit, then hide lightbox, then hide/toggle sidebar
+    if (e.keyCode === 27) {
+      if (edit.hidden() === false) {
+        edit.hide();
+      } else if (lightbox.hidden() === false) {
+        lightbox.display(false);
+      } else {
+        ToggleSection(sidebar);
+        options.sidebar = !options.sidebar;
+        _options.save(options);
+      }
+    }
+    if (lightbox.hidden() === false) {
+      if (e.keyCode == 37 || e.keyCode == 65) {
         lightbox.increment(-1);
         // right/d, go right in lightbox
       } else if (e.keyCode == 39 || e.keyCode == 68) {
         lightbox.increment(1);
       }
     } else {
-      // esc, toggle sidebar
-      if (e.keyCode == 27) {
-        ToggleSection(sidebar);
-        options.sidebar = !options.sidebar;
-        _options.save(options);
-        // ?, toggle key command dialog
-      } else if (e.shiftKey && e.keyCode == 191) {
+      if (e.shiftKey && e.keyCode == 191) {
         ToggleSection(keyCommandDialog);
       }
     }
@@ -534,6 +532,7 @@ function CreateImage(path, file, dropped) {
   }
   if (dropped) {
     img.classList.add('img-loaded');
+    edit.show(img);
   }
   img.addEventListener('click', imageEvents, false);
   imageElements.push(img);
@@ -580,7 +579,9 @@ let lightbox = function () {
   let arrowL = document.getElementById('arrow-left');
   let arrowR = document.getElementById('arrow-right');
   let index = 0;
-  let hidden = !elem.classList.contains('hidden');
+  function hidden() {
+    return elem.classList.contains('hidden');
+  }
 
   function init() {
     arrowL.addEventListener('click', function (e) {
@@ -656,7 +657,6 @@ let lightbox = function () {
     if (disp === false) {
       currentImage = null;
     }
-    hidden = !disp;
     ToggleSection(elem, !disp);
     PreventScroll(disp);
   }
@@ -673,7 +673,6 @@ let lightbox = function () {
 // ~~~~~~~~~ edit view ~~~~~~~~~~~~
 
 let edit = function () {
-  let hidden = true;
   let elem = {
     view: document.getElementById('edit-image'),
     save: document.getElementById('edit-save'),
@@ -683,26 +682,52 @@ let edit = function () {
     source: document.getElementById('edit-source'),
     tags: document.getElementById('edit-tags'),
     notes: document.getElementById('edit-notes'),
+    img: document.getElementById('edit-img'),
+    counter: document.getElementById('edit-counter'),
   }
 
   elem.cancel.addEventListener('click', hide);
   elem.save.addEventListener('click', saveImageEdits);
 
-  function hide() {
-    elem.view.classList.add('hidden');
-    hidden = true;
-    elem.cancel.blur();
+  function hidden() {
+    return elem.view.classList.contains('hidden');
   }
 
-  function show() {
+  function hide() {
+    if (lightbox.hidden()) {
+      currentImage = null;
+    }
+    if (!dropzone.attemptUpload()) {
+      elem.view.classList.add('hidden');
+      hidden = true;
+      elem.cancel.blur();
+      elem.save.blur();
+    }
+  }
+
+  function show(_image) {
+    if (dropzone.droppedFiles.length > 1) {
+      elem.counter.textContent = dropzone.uploadIndex + '/' + dropzone.droppedFiles.length;
+    } else {
+      elem.counter.textContent = '';
+    }
+    if (currentImage) {
+      _image = currentImage;
+    } else {
+      currentImage = _image;
+    }
     elem.view.classList.remove('hidden');
-    hidden = false;
-    elem.filename.value = currentImage.dataset.name;
-    if (imageData[currentImage.dataset.name]) {
-      elem.title.value = imageData[currentImage.dataset.name].title || '';
-      elem.notes.value = imageData[currentImage.dataset.name].notes || '';
-      elem.source.value = imageData[currentImage.dataset.name].source || '';
-      elem.tags.value = imageData[currentImage.dataset.name].tags || '';
+    elem.img.src = _image.src;
+    if (_image.dataset) {
+      elem.filename.value = _image.dataset.name;
+    } else {
+      elem.filename.value = new Date().toISOString().replace(/:/gi, '.');
+    }
+    if (imageData[_image.dataset.name]) {
+      elem.title.value = imageData[_image.dataset.name].title || '';
+      elem.notes.value = imageData[_image.dataset.name].notes || '';
+      elem.source.value = imageData[_image.dataset.name].source || '';
+      elem.tags.value = imageData[_image.dataset.name].tags || '';
     } else {
       elem.title.value = '';
       elem.notes.value = '';
@@ -743,9 +768,10 @@ let edit = function () {
     imageData[currentImage.dataset.name].tags = elem.tags.value || '';
 
 
-    lightbox.setImg(currentImage);
-    elem.view.classList.add('hidden');
-    hidden = true;
+    if (!lightbox.hidden()) {
+      lightbox.setImg(currentImage);
+    }
+    hide();
     saveDb();
   }
 
