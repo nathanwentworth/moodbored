@@ -47,14 +47,21 @@
   width: 100%;
 }
 .lightbox .source {
-  overflow-wrap: break-word;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 80%;
+  display: block;
+  overflow: hidden;
 }
 
 .lightbox .notes {
   width: 90%;
   height: 300px;
   padding: 1rem;
+  border-radius: 8px;
+  background-color: #eee;
   white-space: pre-wrap;
+  overflow-y: scroll;
 }
 
 .lightbox .close {
@@ -65,7 +72,14 @@
 
 .lightbox h1 {
   margin-right: 2.5rem;
+  margin-bottom: 0.25em;
   overflow-wrap: break-word;
+}
+
+.lightbox .secondary-name {
+  font-family: monospace;
+  font-size: smaller;
+  margin-top: 0.5em;
 }
 
 .lightbox .lightbox-img {

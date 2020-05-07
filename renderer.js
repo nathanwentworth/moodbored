@@ -575,6 +575,7 @@ let lightbox = function () {
     source: elem.querySelector('.source'),
     edit: elem.querySelector('.edit'),
     copy: elem.querySelector('.copy'),
+    secondaryName: elem.querySelector('.secondary-name'),
   }
   let arrowL = document.getElementById('arrow-left');
   let arrowR = document.getElementById('arrow-right');
@@ -622,14 +623,26 @@ let lightbox = function () {
     // console.log(imageData, _img.dataset.name);
     if (imageData[_img.dataset.name]) {
       description.title.textContent = imageData[_img.dataset.name].title || _img.dataset.name;
+      if (imageData[_img.dataset.name].title && imageData[_img.dataset.name].title !== _img.dataset.name) {
+        description.secondaryName.textContent = _img.dataset.name;
+      } else {
+        description.secondaryName.textContent = '';
+      }
       description.notes.textContent = imageData[_img.dataset.name].notes || '';
-      description.source.textContent = imageData[_img.dataset.name].source || '';
+      if (imageData[_img.dataset.name].source) {
+        let src = imageData[_img.dataset.name].source.replace(/https?:\/\//g, '');
+        description.source.textContent = src || '';
+      } else {
+        description.source.textContent = '';
+      }
       description.source.href = imageData[_img.dataset.name].source || '#!';
+      description.source.setAttribute('title', imageData[_img.dataset.name].source || '');
     } else {
       description.title.textContent = _img.dataset.name;
       description.notes.textContent = '';
       description.source.textContent = '';
       description.source.href = '#!';
+      description.secondaryName.textContent = '';
     }
     lightbox.display(true);
   }
