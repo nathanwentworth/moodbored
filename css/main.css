@@ -193,7 +193,15 @@ li {
   min-height: 100px;
 }
 
-
+#options-menu {
+  position: fixed;
+  left: 16px;
+  top: 16px;
+  background: #fff;
+  border: 2px solid lightgrey;
+  border-radius: 4px;
+  padding: 12px;
+}
 
 
 .pop-up {
@@ -223,7 +231,6 @@ input[type=text] {
 }
 
 input[type=text].inline {
-  border: none;
   font-size: 1rem;
   padding: 0;
 }

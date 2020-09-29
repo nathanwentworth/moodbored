@@ -3,7 +3,7 @@
 const moodbored = 'moodbored';
 
 // requires
-const { remote, clipboard, nativeImage } = require('electron');
+const { ipcRenderer, remote, clipboard, nativeImage } = require('electron');
 const { Menu, MenuItem } = remote;
 const { dialog } = remote;
 const fs = require('fs');
@@ -94,6 +94,7 @@ var dropzone = function () {
 
   function attemptUpload() {
     uploadIndex++;
+    console.log('attempting upload of index', uploadIndex);
     if (uploadIndex < droppedFiles.length) {
       upload(droppedFiles[uploadIndex], uploadPath);
       return true;
@@ -105,8 +106,8 @@ var dropzone = function () {
   }
 
   function upload(data, altPath) {
-    let isFolder = !data.type
-    if (isFolder) {
+    console.log('uploading', data);
+    if (!data.type && data.path) {
       console.log('is a folder!')
       console.log(data.path)
       let _root = data.path;
@@ -126,33 +127,44 @@ var dropzone = function () {
     let name = '';
     let domain = '';
 
-    let isImage = _data.type.match(imgFileTypes);
+    let isImage = Buffer.isBuffer(_data) || _data.type.match(imgFileTypes);
 
     if (!isImage) {
       notification({ success: false, name: name, reason: 'not an image' });
       return;
     }
 
-    let date = new Date().toISOString().replace(/:/gi, '.');
-    name = _data.name;
+    let date = new Date().toISOString().replace(/:/gi, '-');
+    name = _data.name || date + '.png';
     path += name;
 
     if (fs.existsSync(path)) {
       notification({ success: false, name: name, reason: 'file already exists' });
       return;
     }
+    if (_data.path) {
+      let req = fs.createReadStream(_data.path);
+      req.on('open', () => {
+        req.pipe(fs.createWriteStream(path));
+      });
+      req.on('end', function() {
+        console.log('image done loading, creating image');
+        CreateImage(currentPath, name, true);
+      });
 
-    let req = fs.createReadStream(_data.path);
-    req.on('open', () => {
-      req.pipe(fs.createWriteStream(path));
-    });
-    req.on('end', function() {
-      console.log('image done loading, creating image');
-      CreateImage(currentPath, name, true);
-    });
+      if (options.moveFile) {
+        fs.unlinkSync(_data.path);
+      }
+    } else {
+      console.log(path, date, name);
+      fs.writeFile(path, data, 'binary', function(err) {
+        if (err) {
+          console.error(err);
+          return;
+        }
 
-    if (options.moveFile) {
-      fs.unlinkSync(_data.path);
+        CreateImage(currentPath, name, true);
+      });
     }
 
     notification({ success: true, name: name });
@@ -192,13 +204,13 @@ var dropzone = function () {
     copy,
     drop,
     attemptUpload,
+    upload,
     droppedFiles,
     uploadIndex
   }
 }();
 
-let hideSidePanelCtrl = document.getElementById('hide-side-panel-ctrl');
-let hideOptionsCtrl = document.getElementById('options-ctrl');
+let hideOptionsCtrl = document.getElementById('options-close-ctrl');
 let howToCloseCtrl = document.getElementById('how-to-close-ctrl');
 let infoCloseCtrl = document.getElementById('info-close-ctrl');
 
@@ -249,6 +261,34 @@ function InitialLoad() {
   }
 
   loadDb();
+
+  ipcRenderer.on('OpenNewRootFolder', (event) => {
+    OpenNewRootFolder();
+  });
+
+  ipcRenderer.on('openSettings', (event) => {
+    ToggleSection(_options.menu);
+  });
+
+  ipcRenderer.on('toggleSidebar', (event) => {
+    toggleSidebar();
+  });
+
+  window.addEventListener('paste', (event) => {
+    var items = (event.clipboardData || event.originalEvent.clipboardData).items;
+    console.log(JSON.stringify(items)); // will give you the mime types
+    for (let index in items) {
+      var item = items[index];
+      if (item.kind === 'file') {
+        var blob = item.getAsFile();
+        var reader = new FileReader();
+        reader.onload = function(event){
+          console.log(event.target.result)}; // data url!
+        reader.readAsDataURL(blob);
+      }
+    }
+  })
+
 
   mainContainer.classList.add('fade-in');
 }
@@ -303,17 +343,17 @@ function OptionsController(e) {
   _options.save(options);
 }
 
+function toggleSidebar() {
+  ToggleSection(sidebar);
+  options.sidebar = !options.sidebar;
+  _options.save(options);
+}
+
 function AddEventsToButtons() {
-  openFolderCtrl.addEventListener('click', OpenNewRootFolder, true);
+  // openFolderCtrl.addEventListener('click', OpenNewRootFolder, true);
 
   hideOptionsCtrl.addEventListener('click', function () {
     ToggleSection(_options.menu);
-  });
-
-  hideSidePanelCtrl.addEventListener('click', function () {
-    ToggleSection(sidebar);
-    options.sidebar = !options.sidebar;
-    _options.save(options);
   });
 
   let optionsMenu = document.getElementById('options-menu');
@@ -399,6 +439,7 @@ function SetAllLinksExternal() {
   }
 }
 
+
 // recursive function that gets the new directories.
 // pushes all tail/endpoint directories into `leaves`
 function GetNewDirectoryStructure(path) {
@@ -427,30 +468,41 @@ function GetNewDirectoryStructure(path) {
 }
 
 function CreateFolderView() {
+  let lastPath = [''];
   ClearChildren(folderView);
-  if (leaves.length > 1) {
-    leaves.sort();
-    leaves.forEach((element) => {
-      CreateFolderElement(element);
-    });
+  if (leaves.length <= 1) {
+    return;
   }
+  leaves.sort();
 
-  function CreateFolderElement(totalPath) {
+  for (let index = 0; index < leaves.length; index++) {
+    let totalPath = leaves[index];
     let folderButton = document.createElement('button');
     let trimmedFolderButtonTextContent = totalPath.replace(rootDirectory + "/", "");
-    console.log('creating', trimmedFolderButtonTextContent)
+    // console.log('creating', trimmedFolderButtonTextContent)
     let folderHierarchy = trimmedFolderButtonTextContent.split('/');
     // console.log('folderHierarchy', folderHierarchy)
-    for (var i = 0; i < folderHierarchy.length; i++) {
+    for (let i = 0; i < folderHierarchy.length; i++) {
       // if (folderHierarchy[i].length > 16) {
       //   folderHierarchy[i] = folderHierarchy[i].substring(0,15) + '…'
       //   console.log('folder name is too long!', folderHierarchy[i])
       // }
     }
-    let folderButtonTextContent = folderHierarchy.join(' / ');
+    // let folderContainer = null;
+    // for (let i = 0; i < folderHierarchy.length - 1; i++) {
+    //   if (lastPath.length < i || lastPath[i] !== folderHierarchy[i]) {
+    //     folderContainer = document.createElement('div');
+    //     let title = document.createElement('h' + Math.max(i + 1, 5));
+    //     title.textContent = folderHierarchy[i];
+    //     folderContainer.setAttribute('id', folderHierarchy[i]);
+    //     folderContainer.appendChild(title);
+    //     folderView.appendChild(folderContainer);
+    //   }
+    // }
+    let folderButtonTextContent = folderHierarchy[folderHierarchy.length - 1];
 
     folderButton.setAttribute('title', trimmedFolderButtonTextContent)
-    folderButton.innerText = folderButtonTextContent;
+    folderButton.innerText = trimmedFolderButtonTextContent;
 
     folderButton.addEventListener('click', () => {
       if (lastFolderButton) {
@@ -469,8 +521,13 @@ function CreateFolderView() {
       dropzone.drop(e, totalPath);
     }, false)
 
-    folderView.appendChild(folderButton);
+    let parent = folderView;
+    parent.appendChild(folderButton);
+    lastPath = folderHierarchy;
+
   }
+
+
 }
 
 function LoadDirectoryContents(path, newRoot) {
@@ -648,7 +705,7 @@ let lightbox = function () {
   }
 
   function increment(amount) {
-    console.log(document.activeElement);
+    // console.log(document.activeElement);
     if (document.activeElement.tagName === 'TEXTAREA' || document.activeElement.tagName === 'INPUT') {
       return;
     }
@@ -697,10 +754,21 @@ let edit = function () {
     notes: document.getElementById('edit-notes'),
     img: document.getElementById('edit-img'),
     counter: document.getElementById('edit-counter'),
+    dateButton: document.getElementById('edit-date-button'),
   }
 
   elem.cancel.addEventListener('click', hide);
   elem.save.addEventListener('click', saveImageEdits);
+  elem.dateButton.addEventListener('click', insertDate);
+
+  function insertDate() {
+    let extension = '';
+    if (elem.filename.value) {
+      let start = elem.filename.value.lastIndexOf('.');
+      extension = elem.filename.value.substring(start);
+    }
+    elem.filename.value = new Date().toISOString().replace(/:/gi, '.') + extension;
+  }
 
   function hidden() {
     return elem.view.classList.contains('hidden');
@@ -734,7 +802,7 @@ let edit = function () {
     if (_image.dataset) {
       elem.filename.value = _image.dataset.name;
     } else {
-      elem.filename.value = new Date().toISOString().replace(/:/gi, '.');
+      insertDate();
     }
     if (imageData[_image.dataset.name]) {
       elem.title.value = imageData[_image.dataset.name].title || '';
@@ -747,6 +815,7 @@ let edit = function () {
       elem.source.value = '';
       elem.tags.value = '';
     }
+    elem.filename.focus();
   }
 
   function saveImageEdits() {
@@ -779,6 +848,7 @@ let edit = function () {
     imageData[currentImage.dataset.name].source = elem.source.value || '';
     imageData[currentImage.dataset.name].notes = elem.notes.value || '';
     imageData[currentImage.dataset.name].tags = elem.tags.value || '';
+    imageData[currentImage.dataset.name].editTime = new Date().toISOString();
 
 
     if (!lightbox.hidden()) {
@@ -887,13 +957,22 @@ function CreateRightClickMenu(target) {
       }
     }));
 
-    // rightClickMenu.append(new MenuItem({
-    //   label: 'Paste Image',
-    //   click() {
-    //     clipboard.readImage();
-    //   }
-    // }));
   }
+
+  rightClickMenu.append(new MenuItem({
+    label: 'Paste Image',
+    click() {
+      let clipImage = clipboard.readImage();
+      if (clipImage.isEmpty()) {
+        console.warn('Pasted image is empty?');
+        // notification({ success: false, name: name, reason: 'pasted image is empty.' });
+        return;
+      }
+      let uploading = clipImage.toPNG();
+      console.log(uploading, Buffer.isBuffer(uploading));
+      dropzone.upload(uploading);
+    }
+  }));
 
   return rightClickMenu;
 }

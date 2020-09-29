@@ -1,4 +1,5 @@
-const electron = require('electron')
+const electron = require('electron');
+const { webContents } = require('electron');
 // Module to control application life.
 const app = electron.app
 // Module to create native browser window.
@@ -10,7 +11,7 @@ const teenyconf = require('./js/main/config.js');
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
-let mainWindow
+let mainWindow;
 
 function createWindow () {
   // Create the browser window.
@@ -113,6 +114,27 @@ const template = [
             createWindow();
           }
         }
+      },{
+        label: 'Open Folder',
+        accelerator: 'CommandOrControl+Shift+O',
+        enabled: true,
+        click() {
+          mainWindow.webContents.send('OpenNewRootFolder',null);
+        }
+      },{
+        label: 'Import File(s)',
+        accelerator: 'CommandOrControl+O',
+        enabled: true,
+        click() {
+
+        }
+      },{
+        label: 'Settings',
+        accelerator: 'CommandOrControl+,',
+        enabled: true,
+        click() {
+          mainWindow.webContents.send('openSettings',null);
+        }
       }
     ]
   },
@@ -133,6 +155,14 @@ const template = [
   {
     label: 'View',
     submenu: [
+      {
+        label: 'Toggle Sidebar',
+        accelerator: 'Alt+0',
+        enabled: true,
+        click() {
+          mainWindow.webContents.send('toggleSidebar',null);
+        }
+      },
       {role: 'reload'},
       {role: 'forcereload'},
       {role: 'toggledevtools'},
