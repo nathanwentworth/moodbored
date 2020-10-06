@@ -21,7 +21,7 @@
   "author": "nathan wentworth <me@nathanwentworth.co>",
   "license": "CC0-1.0",
   "devDependencies": {
-    "electron": "^8.2.5",
+    "electron": "^8.5.1",
     "electron-packager": "^12.2.0"
   },
   "dependencies": {
