@@ -412,14 +412,14 @@ function SetVersionInfo() {
 
 // open a system dialog to select a new root folder
 function OpenNewRootFolder() {
-  dialog.showOpenDialog({properties: ["openDirectory"]}, (folder) => {
-    if (folder === undefined) {
+  dialog.showOpenDialog({properties: ["openDirectory"]}).then( (result) => {
+    if (result.cancelled && result.filePaths && result.filePaths[0]) {
       console.log("no file selected");
       return;
     }
 
-    console.log(folder);
-    let _root = folder[0];
+    console.log('new result', result);
+    let _root = result.filePaths[0];
     GetNewDirectoryStructure(_root);
     LoadDirectoryContents(_root, true);
     CreateFolderView();
@@ -617,7 +617,12 @@ function loadDb() {
 }
 
 function copyImage(src) {
-  clipboard.writeImage(nativeImage.createFromPath(src));
+  if (process.platform === 'win32' && src[0] === '/') {
+    src = src.substring(1);
+  }
+  var copiedImage = nativeImage.createFromPath(src);
+  console.log('copying', src, copiedImage);
+  clipboard.writeImage(copiedImage);
 }
 
 // ~~~~~~~~~ lightbox ~~~~~~~~~
@@ -826,7 +831,11 @@ let edit = function () {
         fs.accessSync(newFileName, fs.constants.W_OK);
         console.error('file already exists with that name!');
       } catch (err) {
-        oldFileName = currentImage.src.replace('file://', '');
+        let toReplace = 'file://';
+        if (process.platform === 'win32') {
+          toReplace = 'file:///';
+        }
+        oldFileName = currentImage.src.replace(toReplace, '');
         currentImage.src = newFileName;
         currentImage.dataset.name = elem.filename.value;
         console.log('old name', oldFileName, 'new name', newFileName);
@@ -916,6 +925,10 @@ function CreateRightClickMenu(target) {
   if (src && src.match(imgFileTypes)) {
     src = src.replace(/%20/g, ' ');
     src = src.replace(/file:\/\//g, '');
+    if (process.platform === 'win32' && src[0] === '/') {
+      src = src.substring(1);
+    }
+
     let _name = src.substring(src.lastIndexOf('/')+1);
     rightClickMenu.append(new MenuItem({
       label: _name,
@@ -946,6 +959,7 @@ function CreateRightClickMenu(target) {
     rightClickMenu.append(new MenuItem({
       label: 'Open in Folder',
       click() {
+        console.log('showing item in folder', src);
         shell.showItemInFolder(src);
       }
     }));
