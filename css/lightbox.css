@@ -63,6 +63,9 @@
   white-space: pre-wrap;
   overflow-y: scroll;
 }
+.lightbox .notes:empty {
+  display: none;
+}
 
 .lightbox .close {
   position: absolute;

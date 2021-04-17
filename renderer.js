@@ -38,6 +38,9 @@ let imageData = {};
 
 // option/input elements
 let openFolderCtrl = document.getElementById('open-folder-ctrl');
+let searchView = document.getElementById('search-box');
+let searchBox = searchView.querySelector('input[type=text]');
+let searchButton = searchView.querySelector('input[type=submit]');
 
 // ~~~~~~~~~ drag and drop ~~~~~~~~~
 
@@ -250,6 +253,8 @@ function InitialLoad() {
   if (rootDirectory == null || rootDirectory == '') {
     ToggleSection(howToDialog, false)
   } else {
+    loadDb();
+
     GetNewDirectoryStructure(rootDirectory);
     CreateFolderView();
 
@@ -258,9 +263,10 @@ function InitialLoad() {
     } else if (rootDirectory != '') {
       LoadDirectoryContents(rootDirectory);
     }
+
+    saveDb();
   }
 
-  loadDb();
 
   ipcRenderer.on('OpenNewRootFolder', (event) => {
     OpenNewRootFolder();
@@ -270,8 +276,18 @@ function InitialLoad() {
     ToggleSection(_options.menu);
   });
 
+  ipcRenderer.on('showSearch', (event) => {
+    ToggleSection(searchView);
+    searchBox.focus();
+  });
+
   ipcRenderer.on('toggleSidebar', (event) => {
     toggleSidebar();
+  });
+
+  searchButton.addEventListener('click', () => {
+    console.log(searchBox.value);
+    find(searchBox.value);
   });
 
   window.addEventListener('paste', (event) => {
@@ -439,6 +455,31 @@ function SetAllLinksExternal() {
   }
 }
 
+// search though files and filter on new files
+function find(query) {
+  let fileNames = Object.keys(imageData);
+  let found = [];
+  for (let i = 0; i < fileNames.length; i++) {
+    let key = fileNames[i];
+    if (!imageData[key]) { continue; }
+    let titleMatch = key.indexOf(query) > -1;
+    if (!imageData[key].tags) { imageData[key].tags = '' }
+    let tagMatch = imageData[key].tags.indexOf(query) > -1;
+    if (!imageData[key].source) { imageData[key].source = '' }
+    let sourceMatch = imageData[key].source.indexOf(query) > -1;
+    if (titleMatch || tagMatch || sourceMatch) {
+      found.push(imageData[key]);
+      console.log(imageData[key]);
+    }
+  }
+  if (found.length > 0) {
+    ClearChildren(imageView);
+    LoadImages(null, found);
+  } else {
+    
+  }
+}
+
 
 // recursive function that gets the new directories.
 // pushes all tail/endpoint directories into `leaves`
@@ -451,6 +492,15 @@ function GetNewDirectoryStructure(path) {
 
       let stat = fs.lstatSync(path + '//' + file);
       if (!stat.isDirectory()) {
+        let data = imageData[file];
+        if (!data) { data = {} }
+        data.path = path.replace(rootDirectory, '');
+        data.file = file;
+        data.source = data.source || '';
+        data.tags = data.tags || '';
+        data.notes = data.notes || '';
+        data.title = data.title || '';
+        imageData[file] = data;
         if (i === dir.length - 1 && !notLeaf) {
           // because it reached the end of the loop and there's no directories,
           // it must be full of images
@@ -553,23 +603,38 @@ function LoadDirectoryContents(path, newRoot) {
   }
 }
 
-function LoadImages(currentPath) {
-  fs.readdir(currentPath, (err, dir) => {
-    if (dir.length <= 0) { return; }
+function LoadImages(currentPath, fileArray) {
+  if (currentPath) {
+    fs.readdir(currentPath, (err, dir) => {
+      if (dir.length <= 0) { return; }
 
-    for (let file of dir) {
-      let isImage = file.match(imgFileTypes);
-      if (isImage) {
-        CreateImage(currentPath, file);
-      } else if (file.match(vidFileTypes)) {
+      for (let file of dir) {
+        let isImage = file.match(imgFileTypes);
+        if (isImage) {
+          CreateImage(currentPath, file);
+        } else if (file.match(vidFileTypes)) {
 
-      } else if (file.match(txtFileTypes)) {
+        } else if (file.match(txtFileTypes)) {
 
+        }
       }
-    }
 
-    console.log('> done loading all images');
-  });
+      console.log('> done loading all images');
+    });
+  } else if (fileArray.length > 0) {
+    console.log(fileArray);
+    for (let file of fileArray) {
+      CreateImage(rootDirectory + file.path, file.file);
+      // let isImage = file.match(imgFileTypes);
+      // if (isImage) {
+      //   CreateImage(currentPath, file);
+      // } else if (file.match(vidFileTypes)) {
+
+      // } else if (file.match(txtFileTypes)) {
+
+      // }
+    }
+  }
 }
 
 function CreateImage(path, file, dropped) {

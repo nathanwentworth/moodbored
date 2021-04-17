@@ -29,7 +29,8 @@ function createWindow () {
     minWidth: 600,
     minHeight: 460,
     webPreferences: {
-      nodeIntegration: true
+      nodeIntegration: true,
+      enableRemoteModule: true,
     }
 
   })
@@ -37,6 +38,8 @@ function createWindow () {
   if (windowX != null && windowY != null) {
     mainWindow.setPosition(windowX, windowY);
   }
+
+  // mainWindow.setMenuBarVisibility(false);
 
   // and load the index.html of the app.
   mainWindow.loadURL(url.format({
@@ -149,7 +152,15 @@ const template = [
       {role: 'paste'},
       {role: 'pasteandmatchstyle'},
       {role: 'delete'},
-      {role: 'selectall'}
+      {role: 'selectall'},
+      {
+        label: 'Find',
+        accelerator: 'CommandOrControl+f',
+        enabled: true,
+        click() {
+          mainWindow.webContents.send('showSearch',null);
+        }
+      },
     ]
   },
   {
