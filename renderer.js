@@ -146,18 +146,25 @@ var dropzone = function () {
       return;
     }
     if (_data.path) {
-      let req = fs.createReadStream(_data.path);
-      req.on('open', () => {
-        req.pipe(fs.createWriteStream(path));
-      });
-      req.on('end', function() {
-        console.log('image done loading, creating image');
-        CreateImage(currentPath, name, true);
-      });
-
+      console.log('copying', _data.path, 'to', path);
+      fs.copyFileSync(_data.path, path);
+      // not sure if i still need this, was causing problems (2021-04-17 - nathan)
+      // let req = fs.createReadStream(_data.path);
+      // req.on('open', () => {
+      //   req.pipe(fs.createWriteStream(path));
+      // });
+      // req.on('end', function() {
+      //   console.log('image done loading, creating image');
+      //   CreateImage(currentPath, name, true);
+      //   notification({ success: true, name: name });
+      // });
+      console.log('image done loading, creating image');
+      CreateImage(currentPath, name, true);
+      
       if (options.moveFile) {
         fs.unlinkSync(_data.path);
       }
+      notification({ success: true, name: name });
     } else {
       console.log(path, date, name);
       fs.writeFile(path, data, 'binary', function(err) {
@@ -167,10 +174,9 @@ var dropzone = function () {
         }
 
         CreateImage(currentPath, name, true);
+        notification({ success: true, name: name });
       });
     }
-
-    notification({ success: true, name: name });
   }
 
 
@@ -292,7 +298,7 @@ function InitialLoad() {
 
   window.addEventListener('paste', (event) => {
     var items = (event.clipboardData || event.originalEvent.clipboardData).items;
-    console.log(JSON.stringify(items)); // will give you the mime types
+    console.log('paste',JSON.stringify(items)); // will give you the mime types
     for (let index in items) {
       var item = items[index];
       if (item.kind === 'file') {
@@ -666,8 +672,14 @@ function CreateImage(path, file, dropped) {
 }
 
 function saveDb() {
-  console.log('saving db!');
-  fs.writeFile(rootDirectory + '/moodbored.json', JSON.stringify(imageData), (err) => {
+  console.log('saving db!', imageData);
+  // have 5 rolling backup states
+  for (let i = 4; i > 0; i--) {
+    if (!fs.existsSync(rootDirectory + `/moodbored-backup-${ i }.json`)) { continue; }
+    fs.copyFileSync(rootDirectory + `/moodbored-backup-${ i }.json`, rootDirectory + `/moodbored-backup-${ i + 1 }.json`);
+  }
+  fs.copyFileSync(rootDirectory + '/moodbored.json', rootDirectory + `/moodbored-backup-1.json`);
+  fs.writeFileSync(rootDirectory + '/moodbored.json', JSON.stringify(imageData), (err) => {
     if (err) throw err;
     console.log('saved data!', imageData);
   })
@@ -676,7 +688,18 @@ function saveDb() {
 function loadDb() {
   let dataDir = rootDirectory + '/moodbored.json';
   if (fs.existsSync(dataDir)) {
-    imageData = JSON.parse(fs.readFileSync(dataDir));
+    let rawDb = fs.readFileSync(dataDir);
+    let backupIndex = 1;
+    while (rawDb.length < 1) {
+      let backupPath = rootDirectory + `/moodbored-backup-${ backupIndex }.json`;
+      if (fs.existsSync(backupPath)) {
+        rawDb = fs.readFileSync(backupPath);
+      } else {
+        console.error('data could not be loaded, and there are no functioning backups!!!!');
+        return;
+      }
+    }
+    imageData = JSON.parse(rawDb);
     console.log('loaded data!', imageData);
   }
 }
@@ -990,8 +1013,11 @@ function CreateRightClickMenu(target) {
   if (src && src.match(imgFileTypes)) {
     src = src.replace(/%20/g, ' ');
     src = src.replace(/file:\/\//g, '');
-    if (process.platform === 'win32' && src[0] === '/') {
-      src = src.substring(1);
+    if (process.platform === 'win32') {
+      if (src[0] === '/') {
+        src = src.substring(1);
+      }
+      src = src.replace(/\//g, '\\');
     }
 
     let _name = src.substring(src.lastIndexOf('/')+1);
@@ -1025,7 +1051,9 @@ function CreateRightClickMenu(target) {
       label: 'Open in Folder',
       click() {
         console.log('showing item in folder', src);
-        shell.showItemInFolder(src);
+        remote.shell.showItemInFolder(src);
+        // this will open in the default image viewer
+        // remote.shell.openPath(src);
       }
     }));
 
