@@ -235,7 +235,7 @@ input[type=text].inline {
   padding: 0;
 }
 
-input[type=button], button {
+input[type=button], input[type=submit], button {
   border: none;
   padding: 0.5rem;
   border-radius: 6px;
@@ -246,6 +246,8 @@ input[type=button], button {
 
 input[type=button]:hover,
 input[type=button]:focus,
+input[type=submit]:hover,
+input[type=submit]:focus,
 button:hover,
 button:focus {
   background: #f55;

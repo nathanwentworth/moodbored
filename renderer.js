@@ -239,6 +239,8 @@ let title = document.getElementsByTagName('title')[0];
 // caching access, and client-side access
 let leaves = [];
 
+let ignoredDirectories = ['iPod Photo Cache'];
+
 // on load, run the init and the loadfiles functions
 window.addEventListener('load', InitialLoad, false);
 
@@ -462,17 +464,31 @@ function SetAllLinksExternal() {
 }
 
 // search though files and filter on new files
-function find(query) {
+function find(query, fieldLimit) {
+  if (query && query.target) {
+    query = query.target.textContent;
+  }
+  console.log('finding', query, 'limiting?', fieldLimit);
   let fileNames = Object.keys(imageData);
   let found = [];
   for (let i = 0; i < fileNames.length; i++) {
     let key = fileNames[i];
+    let titleMatch = false;
+    let tagMatch = false;
+    let sourceMatch = false;
+
     if (!imageData[key]) { continue; }
-    let titleMatch = key.indexOf(query) > -1;
+    if (!fieldLimit || fieldLimit === 'name') {
+      titleMatch = key.indexOf(query) > -1;
+    }
     if (!imageData[key].tags) { imageData[key].tags = '' }
-    let tagMatch = imageData[key].tags.indexOf(query) > -1;
+    if (!fieldLimit || fieldLimit === 'tags') {
+      tagMatch = imageData[key].tags.indexOf(query) > -1;
+    }
     if (!imageData[key].source) { imageData[key].source = '' }
-    let sourceMatch = imageData[key].source.indexOf(query) > -1;
+    if (!fieldLimit || fieldLimit === 'source') {
+      sourceMatch = imageData[key].source.indexOf(query) > -1;
+    }
     if (titleMatch || tagMatch || sourceMatch) {
       found.push(imageData[key]);
       console.log(imageData[key]);
@@ -514,6 +530,7 @@ function GetNewDirectoryStructure(path) {
         }
       } else {
         let totalPath = path + '/' + file;
+        if (ignoredDirectories.indexOf(file) > -1) { return; }
         // because there's a directory, it cannot be an end folder
         notLeaf = true;
         // starts the function again in the child directory it found
@@ -722,9 +739,11 @@ let lightbox = function () {
     close: elem.querySelector('.close'),
     title: elem.querySelector('.file-name'),
     notes: elem.querySelector('.notes'),
+    tags: elem.querySelector('.tags'),
     source: elem.querySelector('.source'),
     edit: elem.querySelector('.edit'),
     copy: elem.querySelector('.copy'),
+    open: elem.querySelector('.open'),
     secondaryName: elem.querySelector('.secondary-name'),
   }
   let arrowL = document.getElementById('arrow-left');
@@ -757,6 +776,17 @@ let lightbox = function () {
       copyImage(currentImage.src);
     }, false);
 
+    description.open.addEventListener('click', () => {
+      let src = currentImage.src;
+      if (process.platform === 'win32') {
+        if (src[0] === '/') {
+          src = src.substring(1);
+        }
+        src = src.replace(/\//g, '\\');
+      }
+
+      remote.shell.showItemInFolder(src);
+    });
     description.edit.addEventListener('click', () => {
       edit.show();
     });
@@ -768,25 +798,40 @@ let lightbox = function () {
     img.src = _img.src;
     index = +_img.dataset.index;
     description.title.setAttribute('alt', _img.dataset.name);
+    ClearChildren(description.tags);
     arrowL.style.backgroundImage = 'url("' + imageElements[getIncrementedIndex(-1)].src + '")';
     arrowR.style.backgroundImage = 'url("' + imageElements[getIncrementedIndex(1)].src + '")';
     // console.log(imageData, _img.dataset.name);
-    if (imageData[_img.dataset.name]) {
-      description.title.textContent = imageData[_img.dataset.name].title || _img.dataset.name;
-      if (imageData[_img.dataset.name].title && imageData[_img.dataset.name].title !== _img.dataset.name) {
+    let itemData = imageData[_img.dataset.name];
+    if (itemData) {
+      description.title.textContent = itemData.title || _img.dataset.name;
+      if (itemData.title && itemData.title !== _img.dataset.name) {
         description.secondaryName.textContent = _img.dataset.name;
       } else {
         description.secondaryName.textContent = '';
       }
-      description.notes.textContent = imageData[_img.dataset.name].notes || '';
-      if (imageData[_img.dataset.name].source) {
-        let src = imageData[_img.dataset.name].source.replace(/https?:\/\//g, '');
+      description.notes.textContent = itemData.notes || '';
+      if (itemData.tags) {
+        let tags = itemData.tags.split(',');
+        for (let i = 0; i < tags.length; i++) {
+          let tag = tags[i].trim();
+          let tagElem = document.createElement('button');
+          tagElem.textContent = tag;
+          tagElem.addEventListener('click', () => {
+            find(tag, 'tags');
+            lightbox.display(false);
+          }, false);
+          description.tags.appendChild(tagElem);
+        }
+      }
+      if (itemData.source) {
+        let src = itemData.source.replace(/https?:\/\//g, '');
         description.source.textContent = src || '';
       } else {
         description.source.textContent = '';
       }
-      description.source.href = imageData[_img.dataset.name].source || '#!';
-      description.source.setAttribute('title', imageData[_img.dataset.name].source || '');
+      description.source.href = itemData.source || '#!';
+      description.source.setAttribute('title', itemData.source || '');
     } else {
       description.title.textContent = _img.dataset.name;
       description.notes.textContent = '';
@@ -911,7 +956,9 @@ let edit = function () {
     elem.filename.focus();
   }
 
-  function saveImageEdits() {
+  function saveImageEdits(event) {
+    event.preventDefault();
+
     let oldFileName = null;
     if (elem.filename.value !== currentImage.dataset.name) {
       let newFileName = (currentImage.dataset.path + '/' + elem.filename.value);

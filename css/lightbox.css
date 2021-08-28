@@ -54,6 +54,14 @@
   overflow: hidden;
 }
 
+.lightbox .tags button {
+  display: inline-block;
+  margin-right: 0.5rem;
+}
+.lightbox .tags button::before {
+  content: '#';
+}
+
 .lightbox .notes {
   width: 90%;
   height: 300px;

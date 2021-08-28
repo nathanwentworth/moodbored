@@ -75,6 +75,7 @@
           <h1 class="file-name"></h1>
           <p class="secondary-name"></p>
           <p><a href="#!" class="source">source</a></p>
+          <div class="tags"></div>
           <div class="notes"></div>
           <button class="edit">edit</button>
           <button class="copy">copy image</button>
@@ -150,7 +151,7 @@
         <label for="notes">Notes</label>
         <textarea class="notes" name="notes" placeholder="add description" id="edit-notes"></textarea>
         <br>
-        <button type="button" class="save" id="edit-save">save</button>
+        <input type="submit" class="save" id="edit-save" value="save" onsubmit="(e) => { e.preventDefault(); return; }">
         <button type="button" class="cancel" id="edit-cancel">cancel</button>
         <div id="edit-counter"></div>
       </form>
