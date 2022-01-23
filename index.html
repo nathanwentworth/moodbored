@@ -17,6 +17,7 @@
       </div>
     </section>
     <section id="view" class="view">
+      <h1 id="image-view-title" class="title">title</h1>
       <div class="images" id="images">
       </div>
       <div class="dropzone hidden" id="image-drop">placeholder text</div>
@@ -59,8 +60,11 @@
 
     <section class="pop-up hidden" id="search-box">
       <h1>search</h1>
-      <input type="text" name="search">
-      <input type="submit" name="search-submit" id="search-submit">
+      <div>
+        <input type="text" name="search">
+        <input type="submit" name="search-submit" id="search-submit">        
+      </div>
+      <div id="search-suggestions"></div>
     </section>
 
     </main>
@@ -68,6 +72,9 @@
     <div class="lightbox hidden horizontal" id="lightbox">
       <div class="img-container">
         <img id="lightboxImg" class="lightbox-img" src="#!">
+        <video id="lightboxVid" class="lightbox-vid" autoplay loop controls>
+          <source src="#!" type="video/mp4">
+        </video>
       </div>
       <div class="desc">
         <div class="top">

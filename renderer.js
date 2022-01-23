@@ -30,17 +30,20 @@ let sidebar = document.getElementById('sidebar');
 let view = document.getElementById('view');
 let folderView = document.getElementById('folders');
 let imageView = document.getElementById('images');
+let imageViewTitle = document.getElementById('image-view-title');
 
 
 let lastFolderButton = null;
 
 let imageData = {};
+let allTags = [];
 
 // option/input elements
 let openFolderCtrl = document.getElementById('open-folder-ctrl');
 let searchView = document.getElementById('search-box');
 let searchBox = searchView.querySelector('input[type=text]');
 let searchButton = searchView.querySelector('input[type=submit]');
+let searchSuggestions = document.getElementById('search-suggestions');
 
 // ~~~~~~~~~ drag and drop ~~~~~~~~~
 
@@ -298,14 +301,34 @@ function InitialLoad() {
     find(searchBox.value);
   });
 
+  searchBox.addEventListener('keyup', () => {
+    if (searchBox.value < 1) {
+      ClearChildren(searchSuggestions);
+      return;
+    }
+    let filteredTags = allTags.filter((x) => {
+      return (x.indexOf(searchBox.value) > -1 && x.length > 0);
+    });
+    ClearChildren(searchSuggestions);
+    for (let i = 0; i < filteredTags.length; i++) {
+      let tag = filteredTags[i];
+      let suggestionItem = document.createElement('button');
+      suggestionItem.textContent = tag;
+      suggestionItem.addEventListener('click', () => {
+        find(tag, 'tags');
+      });
+      searchSuggestions.appendChild(suggestionItem);
+    }
+  });
+
   window.addEventListener('paste', (event) => {
-    var items = (event.clipboardData || event.originalEvent.clipboardData).items;
+    let items = (event.clipboardData || event.originalEvent.clipboardData).items;
     console.log('paste',JSON.stringify(items)); // will give you the mime types
     for (let index in items) {
-      var item = items[index];
+      let item = items[index];
       if (item.kind === 'file') {
-        var blob = item.getAsFile();
-        var reader = new FileReader();
+        let blob = item.getAsFile();
+        let reader = new FileReader();
         reader.onload = function(event){
           console.log(event.target.result)}; // data url!
         reader.readAsDataURL(blob);
@@ -319,7 +342,7 @@ function InitialLoad() {
 
 function OptionsInit() {
   Object.keys(_options.elements).forEach((key) => {
-    var optionElement = _options.elements[key];
+    let optionElement = _options.elements[key];
     optionElement.ctrl.value = options[key];
     console.log(key + ': ' + optionElement.ctrl.value);
     optionElement.ctrl.checked = _options[key];
@@ -483,7 +506,15 @@ function find(query, fieldLimit) {
     }
     if (!imageData[key].tags) { imageData[key].tags = '' }
     if (!fieldLimit || fieldLimit === 'tags') {
-      tagMatch = imageData[key].tags.indexOf(query) > -1;
+      let splitTags = imageData[key].tags.split(',');
+      for (let j = 0; j < splitTags.length; j++) {
+        let tagEntry = splitTags[j];
+        tagEntry = tagEntry.trim().toLowerCase();
+        if (tagEntry === query) {
+          tagMatch = true;
+          break;
+        }
+      }
     }
     if (!imageData[key].source) { imageData[key].source = '' }
     if (!fieldLimit || fieldLimit === 'source') {
@@ -497,6 +528,11 @@ function find(query, fieldLimit) {
   if (found.length > 0) {
     ClearChildren(imageView);
     LoadImages(null, found);
+    let findTitle = '';
+    if (fieldLimit === 'tags') {
+      findTitle = '# ' + query;
+    }
+    imageViewTitle.textContent = findTitle;
   } else {
     
   }
@@ -614,7 +650,7 @@ function LoadDirectoryContents(path, newRoot) {
 
   // if the path that's being requested is different than the currently open
   // path, then load it in. otherwise, don't
-  if (path != currentPath) {
+  if (path !== currentPath) {
     currentPath = path;
     ClearChildren(imageView);
     imageElements = [];
@@ -623,6 +659,8 @@ function LoadDirectoryContents(path, newRoot) {
     localStorage.setItem('lastDirectory', lastDirectory);
     title.innerText = moodbored + " - " + path;
     LoadImages(currentPath);
+  } else {
+    console.log('trying to load', path, ', current path', currentPath);
   }
 }
 
@@ -636,13 +674,14 @@ function LoadImages(currentPath, fileArray) {
         if (isImage) {
           CreateImage(currentPath, file);
         } else if (file.match(vidFileTypes)) {
-
+          CreateVideo(currentPath, file);
         } else if (file.match(txtFileTypes)) {
 
         }
       }
 
       console.log('> done loading all images');
+      imageViewTitle.textContent = currentPath.replace(rootDirectory, '');
     });
   } else if (fileArray.length > 0) {
     console.log(fileArray);
@@ -688,6 +727,39 @@ function CreateImage(path, file, dropped) {
   }
 }
 
+function CreateVideo(path, file, dropped) {
+  let vid = document.createElement('video');
+  let sourceElem = document.createElement('source');
+  vid.appendChild(sourceElem);
+  let src = path + '/' + file;
+  sourceElem.src = src;
+  sourceElem.setAttribute('type', 'video/' + file.substring(file.lastIndexOf('.') + 1));
+  vid.dataset.index = imageElements.length;
+  vid.dataset.name = file;
+  vid.dataset.path = path;
+  vid.setAttribute('autoplay', 'true');
+  vid.setAttribute('loop', 'true');
+  ResizeImages();
+  let container = document.createElement('div');
+  container.classList.add('container');
+  container.appendChild(vid);
+  imageView.appendChild(container);
+  vid.onload = function () {
+    vid.classList.add('img-loaded');
+  }
+  if (dropped) {
+    vid.classList.add('img-loaded');
+    edit.show(vid);
+  }
+  vid.addEventListener('click', imageEvents, false);
+  imageElements.push(vid);
+
+  function imageEvents() {
+    lightbox.setImg(vid);
+    PreventScroll(true);
+  }
+}
+
 function saveDb() {
   console.log('saving db!', imageData);
   // have 5 rolling backup states
@@ -717,7 +789,21 @@ function loadDb() {
       }
     }
     imageData = JSON.parse(rawDb);
-    console.log('loaded data!', imageData);
+
+    allTags = [];
+    let imageDataKeys = Object.keys(imageData);
+    for (let i = 0; i < imageDataKeys.length; i++) {
+      let data = imageData[imageDataKeys[i]];
+      let splitTags = data.tags.split(',');
+      for (let j = 0; j < splitTags.length; j++) {
+        let tag = splitTags[j].trim();
+        if (allTags.indexOf(tag) === -1) {
+          allTags.push(tag);
+        }
+      }
+    }
+    allTags = allTags.sort();
+    console.log('loaded data!', imageData, allTags);
   }
 }
 
@@ -735,6 +821,7 @@ function copyImage(src) {
 let lightbox = function () {
   let elem = document.getElementById('lightbox');
   let img = document.getElementById('lightboxImg');
+  let vidElem = document.getElementById('lightboxVid');
   let description = {
     close: elem.querySelector('.close'),
     title: elem.querySelector('.file-name'),
@@ -795,7 +882,18 @@ let lightbox = function () {
 
   function setImg(_img) {
     currentImage = _img;
-    img.src = _img.src;
+    let clickedSourceElem = _img.querySelector('source');
+    if (_img.src.match(imgFileTypes)) {
+      img.src = _img.src;
+      img.classList.remove('hidden');
+      vidElem.classList.add('hidden');
+    } else if (clickedSourceElem && clickedSourceElem.src.match(vidFileTypes)) {
+      vidElem.querySelector('source').src = _img.querySelector('source').src;
+      vidElem.load();
+      vidElem.play();
+      img.classList.add('hidden');
+      vidElem.classList.remove('hidden');
+    }
     index = +_img.dataset.index;
     description.title.setAttribute('alt', _img.dataset.name);
     ClearChildren(description.tags);

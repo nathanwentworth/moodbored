@@ -119,6 +119,10 @@ li {
   padding: 0.5rem 0;
 }
 
+.view .title:empty {
+  display: none;
+}
+
 .images {
   text-align: center;
   display: block;
@@ -139,6 +143,11 @@ li {
   height: auto;
   /*display: inline-block;*/
   opacity: 0;
+}
+
+.images video {
+  max-width: 100%;
+  height: auto;
 }
 
 .images .img-loaded {
@@ -209,9 +218,14 @@ li {
   border-radius: 6px;
   position: fixed;
   right: 32px;
-  bottom: 32px;
+  top: 32px;
   max-width: 98vw;
   max-height: 98vh;
+}
+
+.pop-up h1 {
+  margin: 0;
+  margin-bottom: 0.25em;
 }
 
 kbd {

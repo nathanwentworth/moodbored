@@ -94,7 +94,16 @@
 }
 
 .lightbox .lightbox-img {
-  max-width: 98vw;
+  max-width: 100%;
+  max-height: 98vh;
+  width: auto;
+  height: auto;
+  z-index: -1;
+  pointer-events: all;
+}
+
+.lightbox .lightbox-vid {
+  max-width: 100%;
   max-height: 98vh;
   width: auto;
   height: auto;
