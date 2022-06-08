@@ -8,6 +8,7 @@
     <link rel="stylesheet" type="text/css" href="./css/main.css">
     <style type="text/css" id="user-styles"></style>
     <style type="text/css" id="image-gutter-style"></style>
+    <!-- <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'"> -->
   </head>
   <body>
     <main id="main" class="sidebar-right">
@@ -17,7 +18,16 @@
       </div>
     </section>
     <section id="view" class="view">
-      <h1 id="image-view-title" class="title">title</h1>
+      <div class="title-container">
+        <h1 id="image-view-title" class="title">title</h1>
+        <div>
+          <input id="mass-text" type="text" name="mass-edit">
+          <div id="mass-tag-suggestion"></div>
+        </div>
+        <button id="mass-add">add tag</button>
+        <button id="mass-remove">remove tag</button>
+        <button id="mass-select">select all</button>
+      </div>
       <div class="images" id="images">
       </div>
       <div class="dropzone hidden" id="image-drop">placeholder text</div>
@@ -87,6 +97,7 @@
           <button class="edit">edit</button>
           <button class="copy">copy image</button>
           <button class="open">open image</button>
+          <div class="info"></div>
         </div>
         <div class="buttons">
           <button class="arrow arrow-left" id="arrow-left">←</button>
@@ -154,6 +165,7 @@
         <br>
         <label for="tags">Tags (comma separated)</label>
         <input type="text" name="tags" id="edit-tags">
+        <div id="edit-tag-suggestions"></div>
         <br>
         <label for="notes">Notes</label>
         <textarea class="notes" name="notes" placeholder="add description" id="edit-notes"></textarea>
@@ -165,8 +177,8 @@
     </div>
   </body>
 
-  <script>
-    require('./renderer.js');
+  <script src="./renderer.js">
+    // require('./renderer.js');
     // require('./js/renderer/lightbox.js');
   </script>
 </html>

@@ -21,12 +21,12 @@
   "author": "nathan wentworth <me@nathanwentworth.co>",
   "license": "CC0-1.0",
   "devDependencies": {
-    "electron-packager": "^15.4.0"
+    "electron-packager": "^15.5.1"
   },
   "dependencies": {
-    "electron": "^11.5.0",
+    "electron": "^19.0.3",
     "image-size": "^0.6.3",
-    "npm": "^8.3.2",
+    "npm": "^8.12.1",
     "request": "^2.88.2",
     "teeny-conf": "^1.1.0",
     "trash": "^4.2.1"

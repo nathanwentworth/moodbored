@@ -20,8 +20,8 @@ function createWindow () {
   let windowX = teenyconf.get('posX');
   let windowY = teenyconf.get('posY');
   teenyconf.saveSync();
-
-  mainWindow = new BrowserWindow({
+  
+  mainWindow = new electron.BrowserWindow({
     width: windowWidth,
     height: windowHeight,
     backgroundColor: '#fbfbfb',
@@ -31,6 +31,7 @@ function createWindow () {
     webPreferences: {
       nodeIntegration: true,
       enableRemoteModule: true,
+      contextIsolation: false
     }
 
   })

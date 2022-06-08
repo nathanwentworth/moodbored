@@ -119,6 +119,17 @@ li {
   padding: 0.5rem 0;
 }
 
+.title-container {
+  display: flex;
+  align-items: center;
+}
+.title-container h1 {
+  margin-right: auto;
+}
+.title-container button {
+  border: 1px solid grey;
+  margin-left: 0.25rem;
+}
 .view .title:empty {
   display: none;
 }
@@ -136,6 +147,17 @@ li {
 
 .images .container {
   overflow: hidden;
+  position: relative;
+}
+
+.images .container input[type=checkbox] {
+  position: absolute;
+  left: 0.25rem;
+  top: 0.25rem;
+  display: none;
+}
+.images .container:hover input {
+  display: block;
 }
 
 .images img {
@@ -195,6 +217,19 @@ li {
 .edit-image label {
   margin-top: 1rem;
   margin-bottom: 0.25rem;
+}
+
+.edit-image #edit-tag-suggestions,
+#mass-tag-suggestion {
+  max-height: 200px;
+  overflow-y: scroll;
+  overflow-x: hidden;
+}
+#mass-tag-suggestion {
+  position: absolute;
+  z-index: 1;
+  background: #f1f2f3;
+  width: 200px;
 }
 
 .edit-image textarea {

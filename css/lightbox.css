@@ -45,6 +45,13 @@
 
 .lightbox .desc .top {
   width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  height: 100%;
+}
+.lightbox .desc *:empty {
+  display: none;
 }
 .lightbox .source {
   text-overflow: ellipsis;
@@ -73,6 +80,16 @@
 }
 .lightbox .notes:empty {
   display: none;
+}
+.lightbox .info {
+  width: 90%;
+  padding: 1rem;
+  border-radius: 8px;
+  background-color: #eee;
+  white-space: pre-wrap;
+  font-family: monospace;
+  margin-top: auto;
+  margin-bottom: 0.5rem;
 }
 
 .lightbox .close {

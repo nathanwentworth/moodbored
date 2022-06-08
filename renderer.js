@@ -2,13 +2,18 @@
 
 const moodbored = 'moodbored';
 
+const observer = new PerformanceObserver((list) => {
+    console.log('Long Task detected! 🚩️');
+    const entries = list.getEntries();
+    console.log(entries);
+});
+
+observer.observe({entryTypes: ['longtask']});
+
 // requires
-const { ipcRenderer, remote, clipboard, nativeImage } = require('electron');
-const { Menu, MenuItem } = remote;
-const { dialog } = remote;
+const { ipcRenderer, clipboard, nativeImage, Menu, MenuItem, shell, app } = require('electron');
 const fs = require('fs');
 const trash = require('trash');
-const shell = require('electron').shell;
 
 const _options = require('./js/renderer/options.js');
 
@@ -30,8 +35,6 @@ let sidebar = document.getElementById('sidebar');
 let view = document.getElementById('view');
 let folderView = document.getElementById('folders');
 let imageView = document.getElementById('images');
-let imageViewTitle = document.getElementById('image-view-title');
-
 
 let lastFolderButton = null;
 
@@ -133,7 +136,7 @@ var dropzone = function () {
     let name = '';
     let domain = '';
 
-    let isImage = Buffer.isBuffer(_data) || _data.type.match(imgFileTypes);
+    let isImage = Buffer.isBuffer(_data) || _data.type.match(imgFileTypes) || _data.type.match(vidFileTypes);
 
     if (!isImage) {
       notification({ success: false, name: name, reason: 'not an image' });
@@ -162,7 +165,12 @@ var dropzone = function () {
       //   notification({ success: true, name: name });
       // });
       console.log('image done loading, creating image');
-      CreateImage(currentPath, name, true);
+
+      if (_data.type.match(imgFileTypes)) {
+        CreateImage(currentPath, name, true);
+      } else if (_data.type.match(vidFileTypes)) {
+        CreateVideo(currentPath, name, true);
+      }
       
       if (options.moveFile) {
         fs.unlinkSync(_data.path);
@@ -174,6 +182,12 @@ var dropzone = function () {
         if (err) {
           console.error(err);
           return;
+        }
+
+        if (name.match(imgFileTypes)) {
+          CreateImage(currentPath, name, true);
+        } else if (name.match(vidFileTypes)) {
+          CreateVideo(currentPath, name, true);
         }
 
         CreateImage(currentPath, name, true);
@@ -231,6 +245,14 @@ let infoButton = document.getElementById('info-ctrl');
 let howToDialog = document.getElementById('how-to');
 let infoDialog = document.getElementById('info');
 let keyCommandDialog = document.getElementById('key-commands');
+
+let imageViewTitle = document.getElementById('image-view-title');
+let inputMassText = document.getElementById('mass-text');
+let btnMassEditAdd = document.getElementById('mass-add');
+let btnMassEditRemove = document.getElementById('mass-remove');
+let btnMassEditSelect = document.getElementById('mass-select');
+let massTagSuggest = document.getElementById('mass-tag-suggestion');
+let allSelected = false;
 
 let options = {};
 let lastDirectory = currentPath;
@@ -306,19 +328,9 @@ function InitialLoad() {
       ClearChildren(searchSuggestions);
       return;
     }
-    let filteredTags = allTags.filter((x) => {
-      return (x.indexOf(searchBox.value) > -1 && x.length > 0);
+    tagSuggestions(searchBox.value, searchSuggestions, (tag) => {
+      find(tag, 'tags');
     });
-    ClearChildren(searchSuggestions);
-    for (let i = 0; i < filteredTags.length; i++) {
-      let tag = filteredTags[i];
-      let suggestionItem = document.createElement('button');
-      suggestionItem.textContent = tag;
-      suggestionItem.addEventListener('click', () => {
-        find(tag, 'tags');
-      });
-      searchSuggestions.appendChild(suggestionItem);
-    }
   });
 
   window.addEventListener('paste', (event) => {
@@ -336,8 +348,109 @@ function InitialLoad() {
     }
   })
 
+  inputMassText.addEventListener('keyup', () => {
+    if (inputMassText.value.length < 1) {
+      ClearChildren(massTagSuggest);
+      return;
+    }
+    let enteredTags = inputMassText.value.split(',');
+    enteredTags = enteredTags.map(x => x.trim().toLowerCase());
+    let lastTag = enteredTags[enteredTags.length - 1];
+    tagSuggestions(lastTag, massTagSuggest, (tag) => {
+      enteredTags.length = enteredTags.length - 1
+      enteredTags.push(tag);
+      inputMassText.value = enteredTags.join(', ');
+      inputMassText.focus();
+      ClearChildren(massTagSuggest);
+    });
+  })
+
+  btnMassEditAdd.addEventListener('click', () => {
+    let newTag = inputMassText.value;
+    if (!newTag) { return; }
+    let totalAdded = 0;
+    newTag = newTag.trim().toLowerCase();
+    let checked = document.querySelectorAll('.images input:checked');
+    for (let i = 0; i < checked.length; i++) {
+      let box = checked[i];
+      let data = imageData[box.dataset.name];
+      let tags = normalizeStringToArray(data.tags);
+      if (tags.indexOf(newTag) < 0) {
+        tags.push(newTag);
+        data.tags = tags.join(', ');
+        totalAdded++;
+      }
+    }
+
+    alert(`tag ${ newTag } added to ${ totalAdded } items!`);
+  });
+  btnMassEditRemove.addEventListener('click', () => {
+    let removeTag = inputMassText.value;
+    if (!removeTag) { return; }
+    let totalAdded = 0;
+    removeTag = removeTag.trim().toLowerCase();
+    let checked = document.querySelectorAll('.images input:checked');
+    for (let i = 0; i < checked.length; i++) {
+      let box = checked[i];
+      let data = imageData[box.dataset.name];
+      let tags = normalizeStringToArray(data.tags);
+      if (tags.indexOf(removeTag) === -1) {
+        // tag trying to remove isn't on this element
+        continue;
+      }
+
+      let newTags = [];
+      for (let j = 0; j < tags.length; j++) {
+        let tag = tags[j];
+        if (tag !== removeTag) {
+          newTags.push(tag);
+        }
+      }
+      totalAdded++;
+
+      data.tags = newTags.join(', ');
+
+    }
+    alert(`tag ${ removeTag } removed from ${ totalAdded } items!`);
+
+  });
+  btnMassEditSelect.addEventListener('click', () => {
+    let checkboxes = document.querySelectorAll('.images input[type=checkbox]');
+    for (let i = 0; i < checkboxes.length; i++) {
+      let box = checkboxes[i];
+      if (allSelected === false) {
+        box.checked = true;
+      } else {
+        box.checked = false;
+      }
+    }
+    if (allSelected === false) {
+      allSelected = true;
+    } else {
+      allSelected = false;
+    }
+
+  });
+
 
   mainContainer.classList.add('fade-in');
+}
+
+function tagSuggestions(query, parentElem, clickCallback) {
+  let filteredTags = allTags.filter((x) => {
+    return (x.indexOf(query) > -1 && x.length > 0);
+  });
+  ClearChildren(parentElem);
+  for (let i = 0; i < filteredTags.length; i++) {
+    let tag = filteredTags[i];
+    let suggestionItem = document.createElement('button');
+    suggestionItem.textContent = tag;
+    suggestionItem.setAttribute('type', 'button');
+    suggestionItem.addEventListener('click', () => {
+      clickCallback(tag);
+    });
+    parentElem.appendChild(suggestionItem);
+  }
 }
 
 function OptionsInit() {
@@ -454,7 +567,8 @@ function AddEventsToButtons() {
 
 // set version info in the info screen
 function SetVersionInfo() {
-  document.getElementById('version-disp').innerText = remote.app.getVersion();
+  document.getElementById('version-disp').innerText = '';
+  // document.getElementById('version-disp').innerText = app.getVersion();
 }
 
 // open a system dialog to select a new root folder
@@ -494,6 +608,7 @@ function find(query, fieldLimit) {
   console.log('finding', query, 'limiting?', fieldLimit);
   let fileNames = Object.keys(imageData);
   let found = [];
+  let queryLower = query.toLowerCase();
   for (let i = 0; i < fileNames.length; i++) {
     let key = fileNames[i];
     let titleMatch = false;
@@ -510,7 +625,7 @@ function find(query, fieldLimit) {
       for (let j = 0; j < splitTags.length; j++) {
         let tagEntry = splitTags[j];
         tagEntry = tagEntry.trim().toLowerCase();
-        if (tagEntry === query) {
+        if (tagEntry === queryLower) {
           tagMatch = true;
           break;
         }
@@ -710,6 +825,12 @@ function CreateImage(path, file, dropped) {
   let container = document.createElement('div');
   container.classList.add('container');
   container.appendChild(img);
+
+  let checkbox = document.createElement('input');
+  checkbox.setAttribute('type', 'checkbox');
+  checkbox.dataset.name = file;
+  container.appendChild(checkbox);
+
   imageView.appendChild(container);
   img.onload = function () {
     img.classList.add('img-loaded');
@@ -739,6 +860,7 @@ function CreateVideo(path, file, dropped) {
   vid.dataset.path = path;
   vid.setAttribute('autoplay', 'true');
   vid.setAttribute('loop', 'true');
+  vid.muted = true;
   ResizeImages();
   let container = document.createElement('div');
   container.classList.add('container');
@@ -826,6 +948,7 @@ let lightbox = function () {
     close: elem.querySelector('.close'),
     title: elem.querySelector('.file-name'),
     notes: elem.querySelector('.notes'),
+    info: elem.querySelector('.info'),
     tags: elem.querySelector('.tags'),
     source: elem.querySelector('.source'),
     edit: elem.querySelector('.edit'),
@@ -872,7 +995,7 @@ let lightbox = function () {
         src = src.replace(/\//g, '\\');
       }
 
-      remote.shell.showItemInFolder(src);
+      shell.showItemInFolder(src);
     });
     description.edit.addEventListener('click', () => {
       edit.show();
@@ -887,6 +1010,7 @@ let lightbox = function () {
       img.src = _img.src;
       img.classList.remove('hidden');
       vidElem.classList.add('hidden');
+      vidElem.muted = true;
     } else if (clickedSourceElem && clickedSourceElem.src.match(vidFileTypes)) {
       vidElem.querySelector('source').src = _img.querySelector('source').src;
       vidElem.load();
@@ -937,6 +1061,10 @@ let lightbox = function () {
       description.source.href = '#!';
       description.secondaryName.textContent = '';
     }
+
+    description.info.textContent =
+`dimensions: ${img.naturalWidth}x${img.naturalHeight}
+`;
     lightbox.display(true);
   }
 
@@ -987,6 +1115,7 @@ let edit = function () {
     title: document.getElementById('edit-title'),
     source: document.getElementById('edit-source'),
     tags: document.getElementById('edit-tags'),
+    tagSuggestions: document.getElementById('edit-tag-suggestions'),
     notes: document.getElementById('edit-notes'),
     img: document.getElementById('edit-img'),
     counter: document.getElementById('edit-counter'),
@@ -996,6 +1125,7 @@ let edit = function () {
   elem.cancel.addEventListener('click', hide);
   elem.save.addEventListener('click', saveImageEdits);
   elem.dateButton.addEventListener('click', insertDate);
+  elem.tags.addEventListener('keyup', showTagSuggestions);
 
   function insertDate() {
     let extension = '';
@@ -1019,7 +1149,21 @@ let edit = function () {
       hidden = true;
       elem.cancel.blur();
       elem.save.blur();
+      ClearChildren(elem.tagSuggestions);
     }
+  }
+
+  function showTagSuggestions() {
+    let enteredTags = elem.tags.value.split(',');
+    enteredTags = enteredTags.map(x => x.trim().toLowerCase());
+    let lastTag = enteredTags[enteredTags.length - 1];
+    tagSuggestions(lastTag, elem.tagSuggestions, (tag) => {
+      enteredTags.length = enteredTags.length - 1
+      enteredTags.push(tag);
+      elem.tags.value = enteredTags.join(', ');
+      elem.tags.focus();
+      ClearChildren(elem.tagSuggestions);
+    });
   }
 
   function show(_image) {
@@ -1149,13 +1293,23 @@ function ClearChildren(parent) {
   }
 }
 
+function normalizeStringToArray(array) {
+  let enteredArray = array.split(',');
+  enteredArray = enteredArray.map(x => x.trim().toLowerCase());
+  return enteredArray;
+}
+
 // ~~~~~~~~~ right click menu ~~~~~~~~~
 
 function CreateRightClickMenu(target) {
   let src = target.src;
+  let sourceElem = target.querySelector('source');
+  if (!src && sourceElem) {
+    src = sourceElem.src;
+  }
   let rightClickMenu = new Menu();
 
-  if (src && src.match(imgFileTypes)) {
+  if (src && (src.match(imgFileTypes) || src.match(vidFileTypes))) {
     src = src.replace(/%20/g, ' ');
     src = src.replace(/file:\/\//g, '');
     if (process.platform === 'win32') {
@@ -1196,7 +1350,7 @@ function CreateRightClickMenu(target) {
       label: 'Open in Folder',
       click() {
         console.log('showing item in folder', src);
-        remote.shell.showItemInFolder(src);
+        shell.showItemInFolder(src);
         // this will open in the default image viewer
         // remote.shell.openPath(src);
       }
@@ -1232,5 +1386,5 @@ function CreateRightClickMenu(target) {
 window.addEventListener('contextmenu', (e) => {
   e.preventDefault();
   let target = e.target;
-  CreateRightClickMenu(target).popup(remote.getCurrentWindow())
+  CreateRightClickMenu(target).popup();
 }, false);
