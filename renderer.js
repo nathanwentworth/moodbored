@@ -348,6 +348,8 @@ function InitialLoad() {
     }
   })
 
+  window.addEventListener('scroll', scrollEvent);
+
   inputMassText.addEventListener('keyup', () => {
     if (inputMassText.value.length < 1) {
       ClearChildren(massTagSuggest);
@@ -435,6 +437,29 @@ function InitialLoad() {
 
   mainContainer.classList.add('fade-in');
 }
+
+
+function scrollEvent(event) {
+  for (var i = 0; i < imageElements.length; i++) {
+    let img = imageElements[i];
+    if (!img.dataset.src) { continue; }
+    let top = img.offsetTop;
+    let loops = 0;
+    let topElem = img;
+    while (top === 0 && loops < 10) {
+      topElem = topElem.parentElement;
+      top = topElem.offsetTop;
+      loops++;
+    }
+    console.log(window.scrollY + window.innerHeight, top);
+    if (window.scrollY + window.innerHeight > top) {
+      img.src = img.dataset.src;
+    } else {
+      break;
+    }
+  }
+}
+
 
 function tagSuggestions(query, parentElem, clickCallback) {
   let filteredTags = allTags.filter((x) => {
@@ -796,6 +821,7 @@ function LoadImages(currentPath, fileArray) {
       }
 
       console.log('> done loading all images');
+      scrollEvent();
       imageViewTitle.textContent = currentPath.replace(rootDirectory, '');
     });
   } else if (fileArray.length > 0) {
@@ -817,7 +843,9 @@ function LoadImages(currentPath, fileArray) {
 function CreateImage(path, file, dropped) {
   let img = new Image();
   let src = path + '/' + file;
-  img.src = src;
+  // img.src = src;
+  img.src = '#';
+  img.dataset.src = src;
   img.dataset.index = imageElements.length;
   img.dataset.name = file;
   img.dataset.path = path;
