@@ -24,7 +24,7 @@
     "electron-packager": "^15.5.1"
   },
   "dependencies": {
-    "electron": "^19.0.3",
+    "electron": "^19.0.11",
     "image-size": "^0.6.3",
     "npm": "^8.12.1",
     "request": "^2.88.2",
