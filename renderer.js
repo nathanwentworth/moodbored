@@ -12,6 +12,7 @@ observer.observe({entryTypes: ['longtask']});
 
 // requires
 const { ipcRenderer, clipboard, nativeImage, Menu, MenuItem, shell, app } = require('electron');
+// const {dialog} = require('@electron/remote');
 const fs = require('fs');
 const trash = require('trash');
 
@@ -301,8 +302,9 @@ function InitialLoad() {
   }
 
 
-  ipcRenderer.on('OpenNewRootFolder', (event) => {
-    OpenNewRootFolder();
+  ipcRenderer.on('loadNewRootFolder', (event, data) => {
+    console.log('open root folder', data);
+    OpenNewRootFolder(data);
   });
 
   ipcRenderer.on('openSettings', (event) => {
@@ -448,10 +450,13 @@ function scrollEvent(event) {
     let topElem = img;
     while (top === 0 && loops < 10) {
       topElem = topElem.parentElement;
+      if (!topElem || !topElem.offsetTop) {
+        break;
+      }
       top = topElem.offsetTop;
       loops++;
     }
-    console.log(window.scrollY + window.innerHeight, top);
+    // console.log(window.scrollY + window.innerHeight, top);
     if (window.scrollY + window.innerHeight > top) {
       img.src = img.dataset.src;
     } else {
@@ -597,19 +602,10 @@ function SetVersionInfo() {
 }
 
 // open a system dialog to select a new root folder
-function OpenNewRootFolder() {
-  dialog.showOpenDialog({properties: ["openDirectory"]}).then( (result) => {
-    if (result.cancelled && result.filePaths && result.filePaths[0]) {
-      console.log("no file selected");
-      return;
-    }
-
-    console.log('new result', result);
-    let _root = result.filePaths[0];
-    GetNewDirectoryStructure(_root);
-    LoadDirectoryContents(_root, true);
-    CreateFolderView();
-  })
+function OpenNewRootFolder(data) {
+  GetNewDirectoryStructure(data);
+  LoadDirectoryContents(data, true);
+  CreateFolderView();
 }
 
 // sets a links to open in an external browser
@@ -828,6 +824,7 @@ function LoadImages(currentPath, fileArray) {
     console.log(fileArray);
     for (let file of fileArray) {
       CreateImage(rootDirectory + file.path, file.file);
+      scrollEvent();
       // let isImage = file.match(imgFileTypes);
       // if (isImage) {
       //   CreateImage(currentPath, file);
@@ -866,6 +863,7 @@ function CreateImage(path, file, dropped) {
   if (dropped) {
     img.classList.add('img-loaded');
     edit.show(img);
+    img.src = src;
   }
   img.addEventListener('click', imageEvents, false);
   imageElements.push(img);

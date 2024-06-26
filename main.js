@@ -1,5 +1,6 @@
 const electron = require('electron');
-const { webContents } = require('electron');
+const { webContents, dialog } = require('electron');
+require('@electron/remote/main').initialize();
 // Module to control application life.
 const app = electron.app
 // Module to create native browser window.
@@ -81,6 +82,25 @@ function createWindow () {
   Menu.setApplicationMenu(menu);
 }
 
+function openNewRootFolder() {
+  console.log('open root folder');
+
+  dialog.showOpenDialog({properties: ["openDirectory"]}).then( (result) => {
+    if (result.cancelled && result.filePaths && result.filePaths[0]) {
+      console.log("no file selected");
+      return;
+    }
+
+    console.log('new result', result);
+    let _root = result.filePaths[0];
+    mainWindow.webContents.send('loadNewRootFolder', _root)
+   
+  }).catch(err => {
+    console.log(err)
+  });
+
+}
+
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
@@ -103,7 +123,7 @@ app.on('activate', function () {
   }
 })
 
-const { Menu } = require('electron')
+const { Menu } = require('electron');
 
 const template = [
   {
@@ -123,7 +143,8 @@ const template = [
         accelerator: 'CommandOrControl+Shift+O',
         enabled: true,
         click() {
-          mainWindow.webContents.send('OpenNewRootFolder',null);
+          openNewRootFolder();
+          // mainWindow.webContents.send('OpenNewRootFolder',null);
         }
       },{
         label: 'Import File(s)',
